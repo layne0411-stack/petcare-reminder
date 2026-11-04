@@ -117,7 +117,19 @@
         bindtap="onPickHour"
         data-value="{{item.value}}"
       ><text class="chip-emoji">{{item.emoji}}</text>{{item.label}}</view>
+      <picker
+        class="preset-picker"
+        mode="selector"
+        range="{{hourOptions}}"
+        value="{{remindHour}}"
+        bindchange="onPickCustomHour"
+      >
+        <view class="preset-chip {{isCustomHour ? 'preset-active' : ''}}">
+          <text class="chip-emoji">⏰</text>{{customHourLabel}}
+        </view>
+      </picker>
     </view>
+    <view class="hint gap-top-sm">每天 {{remindHour < 10 ? '0' : ''}}{{remindHour}}:00 提醒 · 实际推送在整点后 5 分钟内</view>
 
     <view class="label gap-top">想提前几天知道</view>
     <view class="preset-row">

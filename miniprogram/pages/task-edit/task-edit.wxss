@@ -30,6 +30,9 @@
   transition: all 0.15s;
 }
 .preset-chip:active { transform: scale(0.95); }
+
+/* 自定义提醒时间的 picker 外壳，保持与快捷 chip 同行排布 */
+.preset-picker { display: inline-flex; }
 .preset-active {
   background: var(--peach-bg);
   color: var(--peach-deep);

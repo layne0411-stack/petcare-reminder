@@ -33,6 +33,9 @@ Page({
       { value: 12, label: '12:00', emoji: '☀️' },
       { value: 20, label: '20:00', emoji: '🌙' }
     ],
+    hourOptions: Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`),
+    isCustomHour: false,
+    customHourLabel: '自定义',
     advanceOptions: [
       { value: 0, label: '当天' },
       { value: 1, label: '提前 1 天' },
@@ -65,6 +68,8 @@ Page({
             advanceDays: typeof t.advanceDays === 'number' ? t.advanceDays : 0,
             note: t.note || ''
           });
+          // 让自定义提醒时间在编辑时正确回显（8/12/20 之外的小时显示为具体时间）
+          this._syncHourView(typeof t.remindHour === 'number' ? t.remindHour : 9);
           wx.setNavigationBarTitle({ title: '编辑任务' });
         })
         .catch(err => {
@@ -152,7 +157,20 @@ Page({
   },
 
   onLastDoneChange(e) { this.setData({ lastDone: e.detail.value }); },
-  onPickHour(e) { this.setData({ remindHour: Number(e.currentTarget.dataset.value) }); },
+
+  /** 同步提醒时间展示：命中 8/12/20 走快捷 chip，否则走自定义 chip 显示具体整点 */
+  _syncHourView(hour) {
+    const presets = this.data.remindHours.map(h => h.value);
+    const hit = presets.indexOf(hour) >= 0;
+    const hh = String(hour).padStart(2, '0');
+    this.setData({
+      remindHour: hour,
+      isCustomHour: !hit,
+      customHourLabel: hit ? '自定义' : `${hh}:00`
+    });
+  },
+  onPickHour(e) { this._syncHourView(Number(e.currentTarget.dataset.value)); },
+  onPickCustomHour(e) { this._syncHourView(Number(e.detail.value)); },
   onPickAdvance(e) { this.setData({ advanceDays: Number(e.currentTarget.dataset.value) }); },
   onNoteInput(e) { this.setData({ note: e.detail.value }); },
   onRemindChange(e) { this.setData({ remindEnabled: e.detail.value }); },
