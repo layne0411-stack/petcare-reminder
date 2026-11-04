@@ -17,3 +17,5 @@ project.private.config.json
 # 系统
 .DS_Store
 Thumbs.db
+_ssh_helper.py
+petcare-deploy.tar.gz
