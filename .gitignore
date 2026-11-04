@@ -1,0 +1,19 @@
+# 敏感信息（含 AppSecret / 数据库密码 / token 密钥，严禁上传）
+backend/.env
+
+# Python
+backend/.venv/
+__pycache__/
+*.pyc
+
+# 运行时数据
+backend/uploads/
+backend/*.sqlite3
+backend/*.db
+
+# 微信开发者工具
+project.private.config.json
+
+# 系统
+.DS_Store
+Thumbs.db

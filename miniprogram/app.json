@@ -1,0 +1,46 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/pets/pets",
+    "pages/history/history",
+    "pages/profile/profile",
+    "pages/task-edit/task-edit",
+    "pages/pet-edit/pet-edit",
+    "pages/pet-weight/pet-weight"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#FFF6EC",
+    "navigationBarTitleText": "崽崽打卡站",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FFF6EC",
+    "backgroundTextStyle": "dark",
+    "enablePullDownRefresh": true
+  },
+  "tabBar": {
+    "color": "#B09C8C",
+    "selectedColor": "#F07B3F",
+    "backgroundColor": "#FFFDF9",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "任务"
+      },
+      {
+        "pagePath": "pages/pets/pets",
+        "text": "宠物"
+      },
+      {
+        "pagePath": "pages/history/history",
+        "text": "记录"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents",
+  "style": "v2"
+}

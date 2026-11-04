@@ -1,0 +1,138 @@
+<view class="page">
+  <!-- 页面小提示 -->
+  <view class="page-tip">🐾 给崽崽安排一个新的护理计划吧</view>
+
+  <!-- 任务类型 -->
+  <view class="card">
+    <view class="label">任务类型</view>
+    <view class="preset-row">
+      <view
+        wx:for="{{presets}}"
+        wx:key="key"
+        class="preset-chip {{activeKey === item.key ? 'preset-active' : ''}}"
+        bindtap="onPickPreset"
+        data-key="{{item.key}}"
+      ><text class="chip-emoji">{{item.icon}}</text>{{item.name}}</view>
+    </view>
+    <input
+      wx:if="{{activeKey === 'custom'}}"
+      class="input"
+      placeholder="输入自定义任务名称，如：洗澡"
+      value="{{typeName}}"
+      bindinput="onTypeNameInput"
+    />
+  </view>
+
+  <!-- 归属宠物 -->
+  <view class="card">
+    <view class="label">属于哪个崽崽</view>
+    <block wx:if="{{pets.length}}">
+      <view class="preset-row">
+        <view
+          class="preset-chip {{petId === 0 ? 'preset-active' : ''}}"
+          bindtap="onPickPet"
+          data-id="0"
+        >🏠 家居 / 设备</view>
+        <view
+          wx:for="{{pets}}"
+          wx:key="id"
+          class="preset-chip {{petId === item.id ? 'preset-active' : ''}}"
+          bindtap="onPickPet"
+          data-id="{{item.id}}"
+        ><text class="chip-emoji">{{item.avatar}}</text>{{item.name}}</view>
+      </view>
+    </block>
+    <view wx:else class="pet-empty">
+      <text class="pet-empty-text">还没有宠物档案，可先按「家居 / 设备」记录</text>
+      <text class="pet-empty-link" bindtap="goAddPet">去添加宠物 ›</text>
+    </view>
+    <input
+      wx:if="{{petId === 0}}"
+      class="input"
+      placeholder="设备名，如：净水器（选填）"
+      value="{{petName}}"
+      bindinput="onPetNameInput"
+    />
+  </view>
+
+  <!-- 间隔 -->
+  <view class="card">
+    <view class="label">重复间隔（天）</view>
+    <view class="preset-row">
+      <view
+        wx:for="{{quickIntervals}}"
+        wx:key="*this"
+        class="preset-chip {{intervalDays === item ? 'preset-active' : ''}}"
+        bindtap="onQuickInterval"
+        data-days="{{item}}"
+      >每 {{item}} 天</view>
+    </view>
+    <view class="interval-row">
+      <text>每</text>
+      <input
+        class="input interval-input"
+        type="number"
+        value="{{intervalText}}"
+        placeholder="30"
+        placeholder-class="cm-placeholder"
+        maxlength="4"
+        bindinput="onIntervalInput"
+        bindblur="onIntervalBlur"
+      />
+      <text>天提醒一次</text>
+    </view>
+  </view>
+
+  <!-- 上次完成 -->
+  <view class="card">
+    <view class="label">上次完成日期</view>
+    <picker mode="date" value="{{lastDone}}" end="{{today}}" bindchange="onLastDoneChange">
+      <view class="picker-value">{{lastDone || '选择日期'}} ▾</view>
+    </picker>
+  </view>
+
+  <!-- 备注 -->
+  <view class="card">
+    <view class="label">备注（选填）</view>
+    <input class="input" placeholder="如：体内驱虫药牌子" value="{{note}}" bindinput="onNoteInput" />
+  </view>
+
+  <!-- 提醒开关 -->
+  <view class="card row-between">
+    <view>
+      <view class="label no-margin">🔔 到期微信提醒</view>
+      <view class="hint">需在弹窗中允许订阅，每授权一次可收到一条提醒</view>
+    </view>
+    <switch checked="{{remindEnabled}}" color="#FF9A62" bindchange="onRemindChange" />
+  </view>
+
+  <!-- 提醒时间 / 提前提醒 -->
+  <view class="card" wx:if="{{remindEnabled}}">
+    <view class="label">几点提醒</view>
+    <view class="preset-row">
+      <view
+        wx:for="{{remindHours}}"
+        wx:key="value"
+        class="preset-chip {{remindHour === item.value ? 'preset-active' : ''}}"
+        bindtap="onPickHour"
+        data-value="{{item.value}}"
+      ><text class="chip-emoji">{{item.emoji}}</text>{{item.label}}</view>
+    </view>
+
+    <view class="label gap-top">想提前几天知道</view>
+    <view class="preset-row">
+      <view
+        wx:for="{{advanceOptions}}"
+        wx:key="value"
+        class="preset-chip {{advanceDays === item.value ? 'preset-active' : ''}}"
+        bindtap="onPickAdvance"
+        data-value="{{item.value}}"
+      >{{item.label}}</view>
+    </view>
+    <view class="hint gap-top-sm">一次性订阅每次只能发一条：选「提前」就不会再发当天提醒</view>
+  </view>
+
+  <view class="save-wrap safe-area-bottom">
+    <button class="btn-primary" bindtap="onSave">保存任务</button>
+  </view>
+</view>

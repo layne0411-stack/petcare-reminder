@@ -1,0 +1,60 @@
+<import src="../../templates/modal.wxml" />
+<view class="page">
+  <view class="page-tip">📖 崽崽的护理小档案</view>
+
+  <!-- 宠物筛选条 -->
+  <scroll-view wx:if="{{pets.length}}" class="pet-filter" scroll-x enable-flex show-scrollbar="{{false}}">
+    <view
+      class="filter-chip {{activePetId === 0 ? 'filter-active' : ''}}"
+      bindtap="onFilterPet"
+      data-id="0"
+    >🐾 全部 {{total}}</view>
+    <view
+      wx:for="{{pets}}"
+      wx:key="id"
+      class="filter-chip {{activePetId === item.id ? 'filter-active' : ''}}"
+      bindtap="onFilterPet"
+      data-id="{{item.id}}"
+    >{{item.avatar}} {{item.name}}</view>
+  </scroll-view>
+
+  <!-- 类型筛选 -->
+  <scroll-view wx:if="{{typeChips.length > 1}}" class="type-filter" scroll-x enable-flex show-scrollbar="{{false}}">
+    <view
+      class="type-chip {{activeType === '' ? 'type-active' : ''}}"
+      bindtap="onFilterType"
+      data-type=""
+    >全部类型</view>
+    <view
+      wx:for="{{typeChips}}"
+      wx:key="*this"
+      class="type-chip {{activeType === item ? 'type-active' : ''}}"
+      bindtap="onFilterType"
+      data-type="{{item}}"
+    >{{item}}</view>
+  </scroll-view>
+
+  <view wx:if="{{empty && !loading}}" class="empty">
+    <text class="empty-pet">😺</text>
+    <text class="empty-title">{{activePetId || activeType ? '这个筛选下还没有记录' : '还没有记录哦'}}</text>
+    <text class="empty-text">去首页完成一次打卡吧</text>
+  </view>
+
+  <view class="card record-card" wx:for="{{records}}" wx:key="id">
+    <view class="record-icon theme-{{item.theme}}"><text>{{item.icon}}</text></view>
+    <view class="record-left">
+      <view class="record-title">{{item.titleText}}</view>
+      <view class="record-note" wx:if="{{item.note}}">{{item.note}}</view>
+      <view class="record-ops">
+        <view class="op-btn" catchtap="onEditDate" data-id="{{item.id}}">✎ 改日期</view>
+        <view class="op-btn op-danger" catchtap="onDeleteRecord" data-id="{{item.id}}">✕ 撤销</view>
+      </view>
+    </view>
+    <view class="record-date">
+      <view class="date-day">{{item.doneDate}}</view>
+      <view class="date-tag">✓ 已完成</view>
+    </view>
+  </view>
+
+  <template is="cute-modal" data="{{modal: modal}}" />
+</view>

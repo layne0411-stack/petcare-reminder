@@ -1,0 +1,35 @@
+<!-- 通用奶油风弹框：<%import%> 后在页面里用 <template is="cute-modal" data="{{modal: modal}}" /> -->
+<template name="cute-modal">
+  <view class="cm-mask" wx:if="{{modal.show}}" catchtap="onModalCancel" catchtouchmove="noop">
+    <view class="cm-box" catchtap="noop">
+      <view class="cm-emoji" wx:if="{{modal.emoji}}">{{modal.emoji}}</view>
+      <view class="cm-title">{{modal.title}}</view>
+      <view class="cm-desc" wx:if="{{modal.desc}}">{{modal.desc}}</view>
+
+      <input
+        wx:if="{{modal.input}}"
+        class="cm-input"
+        value="{{modal.inputValue}}"
+        placeholder="{{modal.placeholder}}"
+        placeholder-class="cm-placeholder"
+        maxlength="{{modal.maxlength}}"
+        confirm-type="done"
+        focus="{{modal.show}}"
+        bindinput="onModalInput"
+        bindconfirm="onModalConfirm"
+      />
+
+      <view class="cm-field" wx:if="{{modal.picker}}">
+        <text class="cm-field-label">{{modal.pickerLabel}}</text>
+        <picker mode="date" value="{{modal.pickerValue}}" end="{{modal.pickerEnd}}" bindchange="onModalPickerChange">
+          <view class="cm-field-value">{{modal.pickerValue}} ▾</view>
+        </picker>
+      </view>
+
+      <view class="cm-actions">
+        <view class="cm-btn cm-cancel" wx:if="{{modal.showCancel}}" catchtap="onModalCancel">{{modal.cancelText}}</view>
+        <view class="cm-btn cm-confirm {{modal.danger ? 'cm-confirm-danger' : ''}}" catchtap="onModalConfirm">{{modal.confirmText}}</view>
+      </view>
+    </view>
+  </view>
+</template>

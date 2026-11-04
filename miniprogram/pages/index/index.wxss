@@ -1,0 +1,222 @@
+.page {
+  padding: 10rpx 0 160rpx;
+}
+
+/* ---------- 顶部问候区 ---------- */
+.hero {
+  position: relative;
+  margin: 20rpx 28rpx 34rpx;
+  padding: 36rpx 34rpx 30rpx;
+  background: linear-gradient(135deg, #FFE8D2 0%, #FFF3E0 55%, #FDEFE9 100%);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+.hero-greet { position: relative; z-index: 2; }
+.hero-hi {
+  display: block;
+  font-size: 38rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+.hero-date {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: var(--ink-light);
+}
+
+/* 猫狗吉祥物 */
+.hero-deco {
+  position: absolute;
+  right: 26rpx;
+  top: 24rpx;
+  z-index: 1;
+}
+.hero-pet { font-size: 76rpx; }
+.hero-pet-dog { display: inline-block; transform: rotate(-8deg); }
+.hero-pet-cat { display: inline-block; margin-left: -14rpx; transform: rotate(6deg) translateY(10rpx); font-size: 64rpx; }
+
+/* 装饰泡泡与爪印 */
+.bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.75);
+}
+.b1 { width: 26rpx; height: 26rpx; right: 250rpx; top: 30rpx; }
+.b2 { width: 16rpx; height: 16rpx; right: 280rpx; top: 100rpx; background: rgba(255, 210, 160, 0.8); }
+.b3 { width: 12rpx; height: 12rpx; right: 230rpx; bottom: 14rpx; background: rgba(255, 190, 150, 0.7); }
+/* 装饰爪印（挂在 hero 上，与吉祥物容器解耦） */
+.paw {
+  position: absolute;
+  font-size: 30rpx;
+  opacity: 0.35;
+  transform: rotate(-20deg);
+}
+.paw1 { left: 34rpx; bottom: 10rpx; }
+.paw2 { left: 88rpx; bottom: 34rpx; font-size: 22rpx; transform: rotate(15deg); opacity: 0.25; }
+
+/* 今日概览小胶囊 */
+.hero-stats {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 14rpx;
+  margin-top: 24rpx;
+}
+.stat-chip {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--coral);
+  font-size: 23rpx;
+  font-weight: 600;
+  border-radius: 24rpx;
+  padding: 8rpx 20rpx;
+}
+.stat-chip-mint { color: var(--mint); }
+.stat-num { font-size: 30rpx; margin-right: 6rpx; }
+
+/* ---------- 空状态 ---------- */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 130rpx 60rpx;
+}
+.empty-pet { font-size: 110rpx; transform: rotate(-6deg); }
+.empty-pet-cat { font-size: 84rpx; margin: -30rpx 0 0 120rpx; transform: rotate(8deg); }
+.empty-title {
+  margin-top: 30rpx;
+  font-size: 34rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+.empty-text { margin-top: 12rpx; color: var(--ink-light); font-size: 27rpx; }
+
+/* ---------- 分组标题 ---------- */
+.section-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  margin: 16rpx 42rpx 20rpx;
+  color: var(--ink);
+}
+
+/* ---------- 任务卡片 ---------- */
+.task-card {
+  display: flex;
+  align-items: flex-start;
+  padding: 30rpx 28rpx 26rpx;
+}
+
+/* 左侧彩色圆底图标 */
+.task-icon {
+  flex-shrink: 0;
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 46rpx;
+  margin-right: 24rpx;
+}
+.theme-peach    { background: var(--peach-bg); }
+.theme-mint     { background: var(--mint-bg); }
+.theme-butter   { background: var(--butter-bg); }
+.theme-lavender { background: var(--lavender-bg); }
+
+.task-main { flex: 1; min-width: 0; }
+.task-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+.task-sub {
+  font-size: 23rpx;
+  color: var(--ink-light);
+  margin-top: 8rpx;
+}
+.task-pill { margin-top: 14rpx; }
+
+/* 操作按钮 */
+.task-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  align-self: center;
+  gap: 14rpx;
+  margin-left: 14rpx;
+}
+
+/* 圆形图标按钮：✓ 完成 / ✕ 删除 */
+.icon-btn {
+  width: 62rpx;
+  height: 62rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: 700;
+  line-height: 1;
+  transition: transform 0.12s, opacity 0.12s;
+}
+.icon-btn:active { transform: scale(0.88); opacity: 0.9; }
+
+/* 到期任务的完成按钮：实心蜜桃，主操作 */
+.icon-done {
+  background: linear-gradient(135deg, #FFB088, var(--peach));
+  color: #FFFFFF;
+  box-shadow: 0 6rpx 16rpx rgba(255, 154, 98, 0.35);
+}
+
+/* 未到期任务的完成按钮：浅底描边，弱化不抢眼 */
+.icon-done-soft {
+  background: #FFF3E8;
+  color: var(--peach-deep);
+  box-shadow: inset 0 0 0 2rpx rgba(255, 154, 98, 0.35);
+}
+
+/* 删除：中性灰，降低误触代价 */
+.icon-del {
+  background: #F5EFE7;
+  color: #BDAE9F;
+  font-size: 26rpx;
+}
+
+/* ---------- 底部添加按钮 ---------- */
+.add-wrap {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  padding: 22rpx 28rpx;
+  background: linear-gradient(transparent, var(--bg) 45%);
+}
+.add-btn { width: 100%; }
+
+/* ---------- 宠物筛选条 ---------- */
+.pet-filter {
+  white-space: nowrap;
+  padding: 4rpx 28rpx 22rpx;
+  display: flex;
+}
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 12rpx 28rpx;
+  margin-right: 16rpx;
+  border-radius: 32rpx;
+  background: #FFFFFF;
+  color: var(--ink-light);
+  font-size: 25rpx;
+  box-shadow: var(--shadow-soft);
+  transition: all 0.15s;
+}
+.filter-chip:active { transform: scale(0.95); }
+.filter-active {
+  background: linear-gradient(135deg, #FFB088, var(--peach));
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 8rpx 18rpx rgba(255, 154, 98, 0.32);
+}

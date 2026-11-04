@@ -1,0 +1,84 @@
+<import src="../../templates/modal.wxml" />
+<view class="page">
+  <view class="page-tip">🐾 建好档案，就能给每只崽崽单独安排护理计划啦</view>
+
+  <!-- 名字 -->
+  <view class="card">
+    <view class="label">崽崽的名字</view>
+    <input class="input" placeholder="如：豆豆 / 咪咪" maxlength="10" value="{{name}}" bindinput="onNameInput" />
+  </view>
+
+  <!-- 种类 -->
+  <view class="card">
+    <view class="label">它是什么小家伙</view>
+    <view class="chip-row">
+      <view
+        wx:for="{{species}}"
+        wx:key="key"
+        class="chip {{speciesKey === item.key ? 'chip-active' : ''}}"
+        bindtap="onPickSpecies"
+        data-key="{{item.key}}"
+      ><text class="chip-emoji">{{item.emoji}}</text>{{item.label}}</view>
+    </view>
+  </view>
+
+  <!-- 头像 -->
+  <view class="card">
+    <view class="label">选个头像</view>
+    <view class="avatar-preview">{{avatar}}</view>
+    <view class="avatar-list">
+      <view
+        wx:for="{{avatars}}"
+        wx:key="*this"
+        class="avatar-item {{avatar === item ? 'avatar-active' : ''}}"
+        bindtap="onPickAvatar"
+        data-avatar="{{item}}"
+      >{{item}}</view>
+    </view>
+  </view>
+
+  <!-- 品种 -->
+  <view class="card">
+    <view class="label">品种（选填）</view>
+    <input class="input" placeholder="{{breedTip}}" maxlength="20" value="{{breed}}" bindinput="onBreedInput" />
+  </view>
+
+  <!-- 生日 -->
+  <view class="card">
+    <view class="label">生日（选填）</view>
+    <picker mode="date" value="{{birthday}}" end="{{today}}" bindchange="onBirthdayChange">
+      <view class="picker-value">{{birthday || '选择日期'}} ▾</view>
+    </picker>
+  </view>
+
+  <!-- 性别 -->
+  <view class="card">
+    <view class="label">性别（选填）</view>
+    <view class="chip-row">
+      <view
+        wx:for="{{genders}}"
+        wx:key="value"
+        class="chip {{gender === item.value ? 'chip-active' : ''}}"
+        bindtap="onPickGender"
+        data-value="{{item.value}}"
+      >{{item.label}}</view>
+    </view>
+  </view>
+
+  <!-- 备注 -->
+  <view class="card">
+    <view class="label">备注（选填）</view>
+    <input class="input" placeholder="如：对鸡肉过敏 / 怕生" maxlength="50" value="{{note}}" bindinput="onNoteInput" />
+  </view>
+
+  <!-- 删除 -->
+  <view wx:if="{{isEdit}}" class="danger-zone">
+    <text class="danger-link" bindtap="onDelete">删除这只崽崽的档案</text>
+  </view>
+
+  <view class="save-wrap safe-area-bottom">
+    <button class="btn-primary" bindtap="onSave" loading="{{saving}}">保存档案</button>
+  </view>
+
+  <template is="cute-modal" data="{{modal: modal}}" />
+</view>

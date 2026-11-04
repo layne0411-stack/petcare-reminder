@@ -1,0 +1,91 @@
+<import src="../../templates/modal.wxml" />
+<view class="page">
+  <!-- 用户身份卡 -->
+  <view class="profile-card">
+    <view class="deco-c1"></view>
+    <view class="deco-c2"></view>
+
+    <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseWechatAvatar">
+      <view class="avatar-wrap">
+        <image
+          wx:if="{{isImageAvatar}}"
+          class="avatar-img"
+          src="{{avatarImg}}"
+          mode="aspectFill"
+          binderror="onAvatarError"
+        />
+        <text wx:else class="avatar-emoji">{{avatar}}</text>
+        <view class="avatar-badge">📷</view>
+      </view>
+    </button>
+
+    <view class="nick-row" bindtap="onEditNickname">
+      <text class="nickname">{{nickname}}</text>
+      <text class="edit-hint">✏️</text>
+    </view>
+
+    <view class="login-tag">✅ 已通过微信登录</view>
+    <view class="join-date" wx:if="{{joinedAt}}">加入于 {{joinedAt}}</view>
+  </view>
+
+  <!-- emoji 头像选择 -->
+  <view class="card">
+    <view class="label">换个可爱头像</view>
+    <view class="emoji-list">
+      <view
+        wx:for="{{emojis}}"
+        wx:key="*this"
+        class="emoji-item {{avatar === item ? 'emoji-active' : ''}}"
+        bindtap="onPickEmoji"
+        data-emoji="{{item}}"
+      >{{item}}</view>
+    </view>
+    <view class="hint">点上方大头像可换成你的微信头像</view>
+  </view>
+
+  <!-- 使用统计 -->
+  <view class="stat-card">
+    <view class="stat-item">
+      <text class="stat-num">{{petCount}}</text>
+      <text class="stat-label">崽崽</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <text class="stat-num">{{taskCount}}</text>
+      <text class="stat-label">护理任务</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <text class="stat-num">{{recordCount}}</text>
+      <text class="stat-label">完成打卡</text>
+    </view>
+  </view>
+
+  <!-- 提醒配额 -->
+  <view class="card remind-card">
+    <view class="remind-row">
+      <view class="remind-left">
+        <view class="remind-title">🔔 可发送提醒</view>
+        <view class="remind-sub">{{quotaLeft}} 条 · 一次性订阅，每次授权可发 1 条</view>
+      </view>
+      <view class="renew-btn" bindtap="onRenewQuota">续订 +1</view>
+    </view>
+    <view class="remind-log" bindtap="onRemindLogs">查看发送记录 ›</view>
+  </view>
+
+  <!-- 菜单 -->
+  <view class="menu">
+    <view class="menu-item" bindtap="onRemindHelp">
+      <text class="menu-icon">🔔</text>
+      <text class="menu-text">订阅提醒说明</text>
+      <text class="menu-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="onAbout">
+      <text class="menu-icon">🐾</text>
+      <text class="menu-text">关于崽崽打卡站</text>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <template is="cute-modal" data="{{modal: modal}}" />
+</view>

@@ -1,0 +1,53 @@
+<view class="page">
+  <!-- 顶部说明 -->
+  <view class="hero">
+    <view class="hero-deco">🐾</view>
+    <view class="hero-title">我的崽崽们</view>
+    <view class="hero-sub">{{pets.length ? '一起照顾 ' + pets.length + ' 个小家伙' : '给每只崽崽建个档案吧'}}</view>
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:if="{{!loading && !pets.length}}" class="empty">
+    <text class="empty-emoji">🐶🐱</text>
+    <text class="empty-title">还没有宠物档案</text>
+    <text class="empty-text">建立档案后，每只崽崽的驱虫、体检、洗澡计划都会分开记录</text>
+  </view>
+
+  <!-- 宠物卡片 -->
+  <view
+    class="pet-card"
+    wx:for="{{pets}}"
+    wx:key="id"
+    bindtap="goEdit"
+    data-id="{{item.id}}"
+  >
+    <view class="pet-avatar">{{item.avatar}}</view>
+    <view class="pet-info">
+      <view class="pet-name-row">
+        <text class="pet-name">{{item.name}}</text>
+        <text class="pet-breed" wx:if="{{item.breed}}">{{item.breed}}</text>
+      </view>
+      <view class="pet-tags">
+        <text class="pill pill-gray">{{item.speciesLabel}}</text>
+        <text class="pill pill-gray" wx:if="{{item.genderLabel}}">{{item.genderLabel}}</text>
+        <text class="pill pill-peach">{{item.taskCount}} 个任务</text>
+        <text class="pill pill-mint" wx:if="{{item.latestWeight}}">⚖️ {{item.latestWeight}}kg</text>
+      </view>
+      <view class="pet-due {{item.dueClass}}">{{item.dueText}}</view>
+      <view class="pet-links">
+        <text class="pet-link" catchtap="goWeight" data-id="{{item.id}}" data-name="{{item.name}}" data-avatar="{{item.avatar}}">⚖️ 体重</text>
+        <text class="pet-link" catchtap="goEdit" data-id="{{item.id}}">✎ 编辑档案</text>
+      </view>
+    </view>
+    <view class="pet-arrow">›</view>
+  </view>
+
+  <!-- 快捷添加任务提示 -->
+  <view wx:if="{{pets.length}}" class="quick-tip">
+    <text class="quick-tip-text">点卡片可编辑档案 · 新增任务时也能选宠物</text>
+  </view>
+
+  <view class="add-wrap safe-area-bottom">
+    <button class="btn-primary" bindtap="goAdd">＋ 添加宠物</button>
+  </view>
+</view>

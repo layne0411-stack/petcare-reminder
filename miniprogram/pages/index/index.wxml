@@ -1,0 +1,128 @@
+<import src="../../templates/modal.wxml" />
+<view class="page">
+  <!-- 顶部问候区 -->
+  <view class="hero">
+    <view class="hero-deco">
+      <text class="hero-pet hero-pet-dog">🐶</text>
+      <text class="hero-pet hero-pet-cat">🐱</text>
+      <view class="bubble b1"></view>
+      <view class="bubble b2"></view>
+      <view class="bubble b3"></view>
+    </view>
+    <view class="paw paw1">🐾</view>
+    <view class="paw paw2">🐾</view>
+    <view class="hero-greet">
+      <text class="hero-hi">{{greeting}}</text>
+      <text class="hero-date">{{dateText}}</text>
+    </view>
+    <view class="hero-stats" wx:if="{{todayCount || overdueCount}}">
+      <view class="stat-chip" wx:if="{{overdueCount}}"><text class="stat-num">{{overdueCount}}</text> 项逾期待处理</view>
+      <view class="stat-chip stat-chip-mint" wx:if="{{todayCount}}"><text class="stat-num">{{todayCount}}</text> 项今天到期</view>
+    </view>
+  </view>
+
+  <!-- 宠物筛选条 -->
+  <scroll-view wx:if="{{pets.length}}" class="pet-filter" scroll-x enable-flex show-scrollbar="{{false}}">
+    <view
+      class="filter-chip {{activePetId === 0 ? 'filter-active' : ''}}"
+      bindtap="onFilterPet"
+      data-id="0"
+    >🐾 全部</view>
+    <view
+      wx:for="{{pets}}"
+      wx:key="id"
+      class="filter-chip {{activePetId === item.id ? 'filter-active' : ''}}"
+      bindtap="onFilterPet"
+      data-id="{{item.id}}"
+    >{{item.avatar}} {{item.name}}</view>
+  </scroll-view>
+
+  <!-- 空状态 -->
+  <view wx:if="{{empty && !loading}}" class="empty">
+    <text class="empty-pet">🐕‍🦺</text>
+    <text class="empty-pet-cat">🐈</text>
+    <block wx:if="{{activePetId}}">
+      <text class="empty-title">这只崽崽还没有任务～</text>
+      <text class="empty-text">点下方按钮给它安排第一条护理计划</text>
+    </block>
+    <block wx:else>
+      <text class="empty-title">还没有任务哦～</text>
+      <text class="empty-text">先建宠物档案，或直接添加一条记录</text>
+    </block>
+  </view>
+
+  <!-- 已到期 -->
+  <block wx:if="{{overdueList.length}}">
+    <view class="section-title">🍓 需要马上处理</view>
+    <view class="card task-card" wx:for="{{overdueList}}" wx:key="id">
+      <view class="task-icon theme-{{item.theme}}"><text>{{item.icon}}</text></view>
+      <view class="task-main" bindtap="goEdit" data-id="{{item.id}}">
+        <view class="task-title">{{item.titleText}}</view>
+        <view class="task-sub">每 {{item.intervalDays}} 天一次 · 上次 {{item.lastDone || '未记录'}}</view>
+        <view class="pill pill-coral task-pill">⏰ {{item.statusText}}</view>
+      </view>
+      <view class="task-actions">
+        <view class="icon-btn icon-done" bindtap="onComplete" data-id="{{item.id}}">✓</view>
+        <view class="icon-btn icon-del" bindtap="onDelete" data-id="{{item.id}}">✕</view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 今天到期 -->
+  <block wx:if="{{todayList.length}}">
+    <view class="section-title">🎉 今天到期</view>
+    <view class="card task-card" wx:for="{{todayList}}" wx:key="id">
+      <view class="task-icon theme-{{item.theme}}"><text>{{item.icon}}</text></view>
+      <view class="task-main" bindtap="goEdit" data-id="{{item.id}}">
+        <view class="task-title">{{item.titleText}}</view>
+        <view class="task-sub">每 {{item.intervalDays}} 天一次 · 上次 {{item.lastDone || '未记录'}}</view>
+        <view class="pill pill-peach task-pill">🌟 {{item.statusText}}</view>
+      </view>
+      <view class="task-actions">
+        <view class="icon-btn icon-done" bindtap="onComplete" data-id="{{item.id}}">✓</view>
+        <view class="icon-btn icon-del" bindtap="onDelete" data-id="{{item.id}}">✕</view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 7 天内 -->
+  <block wx:if="{{upcomingList.length}}">
+    <view class="section-title">🗓 即将到来</view>
+    <view class="card task-card" wx:for="{{upcomingList}}" wx:key="id">
+      <view class="task-icon theme-{{item.theme}}"><text>{{item.icon}}</text></view>
+      <view class="task-main" bindtap="goEdit" data-id="{{item.id}}">
+        <view class="task-title">{{item.titleText}}</view>
+        <view class="task-sub">到期 {{item.nextDue}} · 每 {{item.intervalDays}} 天</view>
+        <view class="pill pill-butter task-pill">⏳ {{item.statusText}}</view>
+      </view>
+      <view class="task-actions">
+        <view class="icon-btn icon-done icon-done-soft" bindtap="onComplete" data-id="{{item.id}}">✓</view>
+        <view class="icon-btn icon-del" bindtap="onDelete" data-id="{{item.id}}">✕</view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 更远 -->
+  <block wx:if="{{laterList.length}}">
+    <view class="section-title">🌿 安排好了的</view>
+    <view class="card task-card" wx:for="{{laterList}}" wx:key="id">
+      <view class="task-icon theme-{{item.theme}}"><text>{{item.icon}}</text></view>
+      <view class="task-main" bindtap="goEdit" data-id="{{item.id}}">
+        <view class="task-title">{{item.titleText}}</view>
+        <view class="task-sub">到期 {{item.nextDue}} · 每 {{item.intervalDays}} 天</view>
+        <view class="pill pill-mint task-pill">🐾 {{item.statusText}}</view>
+      </view>
+      <view class="task-actions">
+        <view class="icon-btn icon-done icon-done-soft" bindtap="onComplete" data-id="{{item.id}}">✓</view>
+        <view class="icon-btn icon-del" bindtap="onDelete" data-id="{{item.id}}">✕</view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 新增按钮 -->
+  <view class="add-wrap safe-area-bottom">
+    <button class="btn-primary add-btn" bindtap="goAdd">🐾 添加记录</button>
+  </view>
+
+  <template is="cute-modal" data="{{modal: modal}}" />
+</view>

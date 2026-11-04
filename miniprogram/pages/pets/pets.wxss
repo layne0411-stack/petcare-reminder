@@ -1,0 +1,156 @@
+.page {
+  padding: 16rpx 0 160rpx;
+}
+
+/* ---------- 顶部 ---------- */
+.hero {
+  position: relative;
+  margin: 20rpx 28rpx 30rpx;
+  padding: 40rpx 36rpx;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(150deg, #FFE8D2 0%, #FFF3E0 65%, #FDEBE4 100%);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+.hero-deco {
+  position: absolute;
+  right: 24rpx;
+  top: 18rpx;
+  font-size: 92rpx;
+  opacity: 0.35;
+  transform: rotate(-12deg);
+}
+.hero-title {
+  font-size: 42rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+.hero-sub {
+  margin-top: 12rpx;
+  font-size: 25rpx;
+  color: var(--ink-light);
+}
+
+/* ---------- 宠物卡片 ---------- */
+.pet-card {
+  display: flex;
+  align-items: center;
+  margin: 0 28rpx 24rpx;
+  padding: 30rpx 26rpx;
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.15s;
+}
+.pet-card:active { transform: scale(0.985); }
+
+.pet-avatar {
+  width: 124rpx;
+  height: 124rpx;
+  flex: 0 0 124rpx;
+  border-radius: 50%;
+  background: linear-gradient(150deg, #FFF1E4, #FFE3D0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64rpx;
+  line-height: 1;
+  margin-right: 24rpx;
+}
+
+.pet-info { flex: 1; min-width: 0; }
+
+.pet-name-row {
+  display: flex;
+  align-items: baseline;
+}
+.pet-name {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+.pet-breed {
+  margin-left: 12rpx;
+  font-size: 23rpx;
+  color: var(--ink-light);
+}
+
+.pet-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 14rpx;
+}
+
+.pet-due {
+  margin-top: 14rpx;
+  font-size: 23rpx;
+  color: var(--ink-light);
+}
+.due-overdue { color: var(--coral); font-weight: 600; }
+.due-today { color: var(--peach-deep); font-weight: 600; }
+.due-ok { color: var(--mint); }
+.due-none { color: var(--ink-light); }
+
+.pet-arrow {
+  font-size: 44rpx;
+  color: #E2D5C6;
+  margin-left: 8rpx;
+}
+
+/* ---------- 空状态 ---------- */
+.empty {
+  margin: 60rpx 28rpx;
+  padding: 70rpx 40rpx;
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.empty-emoji { font-size: 88rpx; letter-spacing: 12rpx; }
+.empty-title {
+  margin-top: 28rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+.empty-text {
+  margin-top: 16rpx;
+  font-size: 25rpx;
+  color: var(--ink-light);
+  text-align: center;
+  line-height: 1.7;
+}
+
+.quick-tip {
+  margin: 6rpx 42rpx 0;
+}
+.quick-tip-text {
+  font-size: 22rpx;
+  color: var(--ink-light);
+}
+
+/* ---------- 底部按钮 ---------- */
+.add-wrap {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  padding: 22rpx 28rpx;
+  background: linear-gradient(transparent, var(--bg) 45%);
+}
+
+/* ---------- 卡片内快捷入口 ---------- */
+.pet-links {
+  display: flex;
+  gap: 18rpx;
+  margin-top: 14rpx;
+}
+.pet-link {
+  font-size: 22rpx;
+  color: var(--peach-deep);
+  background: var(--peach-bg);
+  border-radius: 20rpx;
+  padding: 6rpx 18rpx;
+}
+.pet-link:active { transform: scale(0.94); }
