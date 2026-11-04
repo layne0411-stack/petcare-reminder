@@ -57,6 +57,8 @@ Page({
           this._lastInterval = t.intervalDays;
           this.setData({
             typeName: t.typeName,
+            // 回显任务类型：能匹配到预设就高亮对应 chip，否则走「自定义」
+            activeKey: preset ? preset.key : 'custom',
             petId: t.petId || 0,
             petName: t.petId ? '' : (t.petName || ''),
             intervalDays: t.intervalDays,
