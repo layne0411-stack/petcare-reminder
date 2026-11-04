@@ -42,5 +42,6 @@
   },
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents",
-  "style": "v2"
+  "style": "v2",
+  "__usePrivacyCheck__": true
 }

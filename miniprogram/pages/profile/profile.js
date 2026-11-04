@@ -115,7 +115,11 @@ Page({
   /** 使用微信头像（官方头像昵称填写能力，个人主体可用） */
   onChooseWechatAvatar(e) {
     const tempPath = e.detail && e.detail.avatarUrl;
-    if (!tempPath) return;
+    if (!tempPath) {
+      // 未同意隐私保护指引时，微信不会返回头像临时路径
+      wx.showToast({ title: '需先同意隐私保护指引才能使用微信头像', icon: 'none' });
+      return;
+    }
     wx.showLoading({ title: '上传中', mask: true });
 
     wx.getFileSystemManager().readFile({
@@ -227,6 +231,33 @@ Page({
         '微信规定个人小程序只能使用「一次性订阅」：你每点一次「允许」，服务端可以给你发送一条提醒。\n\n' +
         '建议在弹窗中勾选「总是保持以上选择」，之后保存任务时会自动续上配额。',
       confirmText: '我知道了',
+      showCancel: false
+    });
+  },
+
+  onPrivacy() {
+    if (wx.openPrivacyContract) {
+      wx.openPrivacyContract({
+        fail: () => {
+          openModal(this, {
+            emoji: '🛡️',
+            title: '隐私保护指引',
+            desc: '暂时没有取到隐私协议内容，请稍后再试。',
+            confirmText: '好的',
+            showCancel: false
+          });
+        }
+      });
+      return;
+    }
+    openModal(this, {
+      emoji: '🛡️',
+      title: '隐私保护指引',
+      desc:
+        '本小程序仅收集：微信头像与昵称（用于展示你的个人资料）、' +
+        '你填写的宠物档案与护理记录（用于计算到期时间并发送提醒）。\n\n' +
+        '不收集位置、相册、通讯录、设备信息，不向任何第三方共享。',
+      confirmText: '好的',
       showCancel: false
     });
   },

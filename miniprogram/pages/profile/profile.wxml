@@ -80,6 +80,11 @@
       <text class="menu-text">订阅提醒说明</text>
       <text class="menu-arrow">›</text>
     </view>
+    <view class="menu-item" bindtap="onPrivacy">
+      <text class="menu-icon">🛡️</text>
+      <text class="menu-text">隐私保护指引</text>
+      <text class="menu-arrow">›</text>
+    </view>
     <view class="menu-item" bindtap="onAbout">
       <text class="menu-icon">🐾</text>
       <text class="menu-text">关于崽崽打卡站</text>
