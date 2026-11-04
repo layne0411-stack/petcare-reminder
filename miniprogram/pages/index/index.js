@@ -86,7 +86,7 @@ Page({
       this.applyFilter();
     } catch (err) {
       console.error('加载任务失败:', err);
-      wx.showToast({ title: '加载失败，请检查服务器', icon: 'none' });
+      wx.showToast({ title: '连不上后端，请检查电脑服务与同一 WiFi', icon: 'none' });
       this.setData({ loading: false });
     }
   },

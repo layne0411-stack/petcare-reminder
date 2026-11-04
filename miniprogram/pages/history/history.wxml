@@ -3,7 +3,7 @@
   <view class="page-tip">📖 崽崽的护理小档案</view>
 
   <!-- 宠物筛选条 -->
-  <scroll-view wx:if="{{pets.length}}" class="pet-filter" scroll-x enable-flex show-scrollbar="{{false}}">
+  <scroll-view wx:if="{{pets.length}}" class="pet-filter" scroll-x show-scrollbar="{{false}}">
     <view
       class="filter-chip {{activePetId === 0 ? 'filter-active' : ''}}"
       bindtap="onFilterPet"
@@ -19,7 +19,7 @@
   </scroll-view>
 
   <!-- 类型筛选 -->
-  <scroll-view wx:if="{{typeChips.length > 1}}" class="type-filter" scroll-x enable-flex show-scrollbar="{{false}}">
+  <scroll-view wx:if="{{typeChips.length > 1}}" class="type-filter" scroll-x show-scrollbar="{{false}}">
     <view
       class="type-chip {{activeType === '' ? 'type-active' : ''}}"
       bindtap="onFilterType"

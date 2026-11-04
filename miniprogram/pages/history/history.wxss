@@ -11,11 +11,13 @@
   white-space: nowrap;
   padding: 0 28rpx 22rpx;
   display: flex;
+  align-items: flex-start;   /* 防御：避免子元素被 stretch 拉满容器高度 */
 }
 .filter-chip {
   display: inline-flex;
   align-items: center;
   flex: 0 0 auto;
+  align-self: flex-start;
   padding: 12rpx 28rpx;
   margin-right: 16rpx;
   border-radius: 32rpx;
@@ -94,6 +96,7 @@
 .type-filter {
   display: flex;
   white-space: nowrap;
+  align-items: flex-start;
   padding: 0 28rpx 4rpx;
   margin-bottom: 18rpx;
 }
@@ -101,6 +104,7 @@
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
+  align-self: flex-start;
   font-size: 24rpx;
   color: var(--ink-light);
   background: #FBF4EA;

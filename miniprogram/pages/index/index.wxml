@@ -22,7 +22,7 @@
   </view>
 
   <!-- 宠物筛选条 -->
-  <scroll-view wx:if="{{pets.length}}" class="pet-filter" scroll-x enable-flex show-scrollbar="{{false}}">
+  <scroll-view wx:if="{{pets.length}}" class="pet-filter" scroll-x show-scrollbar="{{false}}">
     <view
       class="filter-chip {{activePetId === 0 ? 'filter-active' : ''}}"
       bindtap="onFilterPet"

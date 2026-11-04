@@ -199,12 +199,16 @@
   white-space: nowrap;
   padding: 4rpx 28rpx 22rpx;
   display: flex;
+  align-items: flex-start;   /* 防御：避免子元素被 stretch 拉满容器高度 */
 }
 .filter-chip {
   display: inline-flex;
   align-items: center;
   flex: 0 0 auto;
-  padding: 12rpx 28rpx;
+  align-self: flex-start;
+  height: 64rpx;
+  box-sizing: border-box;
+  padding: 0 28rpx;
   margin-right: 16rpx;
   border-radius: 32rpx;
   background: #FFFFFF;
