@@ -67,8 +67,8 @@
 
 .avatar-badge {
   position: absolute;
-  right: -6rpx;
-  bottom: -6rpx;
+  right: -4rpx;
+  bottom: -4rpx;
   width: 52rpx;
   height: 52rpx;
   border-radius: 50%;
@@ -78,7 +78,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 4rpx solid #FFFFFF;
   box-shadow: 0 4rpx 12rpx rgba(255, 154, 98, 0.45);
+  box-sizing: border-box;
 }
 
 .nick-row {

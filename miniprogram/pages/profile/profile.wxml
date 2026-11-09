@@ -15,8 +15,9 @@
           binderror="onAvatarError"
         />
         <text wx:else class="avatar-emoji">{{avatar}}</text>
-        <view class="avatar-badge">📷</view>
       </view>
+      <!-- 相机角标放在 wrap 外层，避免被 overflow:hidden 裁掉 -->
+      <view class="avatar-badge">📷</view>
     </button>
 
     <view class="nick-row" bindtap="onEditNickname">
