@@ -31,15 +31,9 @@
 }
 
 /* 头像（button 需重置默认样式） */
-/* 外层定位容器：无圆角无裁剪，角标浮层挂这里 */
-.avatar-box {
-  position: relative;
-  z-index: 2;
-  width: 168rpx;
-  height: 168rpx;
-}
 .avatar-btn {
   position: relative;
+  z-index: 2;
   padding: 0;
   margin: 0;
   background: transparent;
@@ -71,29 +65,25 @@
   background: #F4F1EC;
 }
 
-/* 相机角标：独立 button 浮层（open-type=chooseAvatar），重置按钮默认样式 */
+/* 相机角标：完全位于头像圆内部（中心距圆心 59.4rpx + 半径 24rpx = 83.4 < 84），
+   任何裁剪都不会碰到它；在 button 内原生点击仍触发 chooseAvatar */
 .avatar-badge {
   position: absolute;
-  right: -6rpx;
-  bottom: -6rpx;
-  z-index: 3;
-  width: 56rpx;
-  height: 56rpx;
-  padding: 0;
-  margin: 0;
+  right: 18rpx;
+  bottom: 18rpx;
+  z-index: 2;
+  width: 48rpx;
+  height: 48rpx;
   border-radius: 50%;
   background: var(--peach);
   color: #fff;
-  font-size: 26rpx;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 4rpx solid #FFFFFF;
-  box-shadow: 0 4rpx 12rpx rgba(255, 154, 98, 0.45);
+  font-size: 24rpx;
+  line-height: 48rpx;
+  text-align: center;
+  border: 3rpx solid #FFFFFF;
+  box-shadow: 0 4rpx 10rpx rgba(255, 154, 98, 0.45);
   box-sizing: border-box;
 }
-.avatar-badge::after { border: none; }
 
 .nick-row {
   position: relative;

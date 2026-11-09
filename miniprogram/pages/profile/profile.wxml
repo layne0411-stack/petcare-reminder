@@ -5,22 +5,21 @@
     <view class="deco-c1"></view>
     <view class="deco-c2"></view>
 
-    <view class="avatar-box">
-      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseWechatAvatar">
-        <view class="avatar-wrap">
-          <image
-            wx:if="{{isImageAvatar}}"
-            class="avatar-img"
-            src="{{avatarImg}}"
-            mode="aspectFill"
-            binderror="onAvatarError"
-          />
-          <text wx:else class="avatar-emoji">{{avatar}}</text>
-        </view>
-      </button>
-      <!-- 相机角标：独立于头像按钮的浮层，同样是 chooseAvatar 按钮，点击也能换头像 -->
-      <button class="avatar-badge" open-type="chooseAvatar" bindchooseavatar="onChooseWechatAvatar">📷</button>
-    </view>
+    <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseWechatAvatar">
+      <view class="avatar-wrap">
+        <image
+          wx:if="{{isImageAvatar}}"
+          class="avatar-img"
+          src="{{avatarImg}}"
+          mode="aspectFill"
+          binderror="onAvatarError"
+        />
+        <text wx:else class="avatar-emoji">{{avatar}}</text>
+        <!-- 相机角标：完全位于头像圆内部，不受 button/wrap 任何裁剪影响；
+             点击区域属于头像 button，原生点击仍触发 chooseAvatar -->
+        <view class="avatar-badge">📷</view>
+      </view>
+    </button>
 
     <view class="nick-row" bindtap="onEditNickname">
       <text class="nickname">{{nickname}}</text>
