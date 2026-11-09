@@ -113,6 +113,10 @@ Page({
   },
 
   /** 使用微信头像（官方头像昵称填写能力，个人主体可用） */
+  // 角标不拦截头像按钮的 chooseAvatar（catchtap 已阻断冒泡），给个轻提示
+  onBadgeTip() {
+    wx.showToast({ title: '点上方头像即可更换微信头像', icon: 'none' });
+  },
   onChooseWechatAvatar(e) {
     const tempPath = e.detail && e.detail.avatarUrl;
     if (!tempPath) {
