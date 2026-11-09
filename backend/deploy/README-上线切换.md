@@ -39,6 +39,21 @@ bash setup-https.sh /root/zaizaidaka.site_bundle.crt /root/zaizaidaka.site.key
 
 腾讯云控制台 → 轻量/CVM → 防火墙（安全组）→ 放行 TCP 80、443。
 
+## 第三步半：同步 uploads 目录（⚠️ 必做，否则历史头像全部 404）
+
+头像等上传文件存在后端 `backend/uploads/`，**本地和服务器各有一份、互不同步**。
+开发期在本地后端上传的文件只存在电脑上，切换到服务器后端后会读取失败（404 → 头像显示回落 emoji）。
+
+切换前把本地新增的文件补传到服务器：
+
+```bash
+scp petcare-reminder/backend/uploads/* root@152.136.58.30:/opt/petcare/backend/uploads/
+```
+
+> 2026-11-09 教训：用户在服务器后端时期上传的头像 u1_1794201109.jpg 只存在服务器，
+> 切回本地后端后 404，数据库头像记录指向了不存在的文件（已在库中重置为 emoji）。
+> 双向都会发生：本地传的切服务器要补传，服务器传的回本地也要拉回。
+
 验证（本机）：
 
 ```bash
