@@ -18,9 +18,13 @@
           <text wx:else class="avatar-emoji">{{avatar}}</text>
         </view>
       </button>
-      <!-- 相机角标：view 兄弟节点（非 button），骑在头像右下边缘；
-           不在 button 内所以不受圆形裁剪，view 无默认样式不会撑爆布局 -->
-      <view class="avatar-badge" catchtap="onBadgeTip">📷</view>
+      <!-- 相机角标：独立 chooseAvatar 按钮，点它同样唤起微信头像选择；
+           兄弟节点定位不受头像按钮圆形裁剪，样式已完整重置 button 默认值 -->
+      <button
+        class="avatar-badge"
+        open-type="chooseAvatar"
+        bindchooseavatar="onChooseWechatAvatar"
+      >📷</button>
     </view>
 
     <view class="nick-row" bindtap="onEditNickname">

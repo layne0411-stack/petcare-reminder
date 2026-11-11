@@ -73,24 +73,32 @@
 
 /* 相机角标：view 兄弟节点骑边（一半在圆内一半在圆外），
    不受 button 圆形裁剪影响；catchtap 提示点头像换头像 */
+/* 相机角标：独立 chooseAvatar button（点角标也能换微信头像）
+   ⚠️ 微信 button 有一整套默认样式（宽度/内边距/行高/字号/边框伪元素），
+   每一项都必须显式覆盖，否则真机布局会失控 */
 .avatar-badge {
   position: absolute;
   right: -10rpx;
   bottom: -10rpx;
   z-index: 3;
+  display: block;
   width: 52rpx;
   height: 52rpx;
+  padding: 0;
+  margin: 0;
   border-radius: 50%;
   background: var(--peach);
   color: #fff;
   font-size: 24rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-weight: normal;
+  line-height: 44rpx; /* 52 - 上下边框 8，用行高垂直居中，比 flex 在 button 上更稳 */
+  text-align: center;
+  text-decoration: none;
   border: 4rpx solid #FFFFFF;
   box-shadow: 0 4rpx 10rpx rgba(255, 154, 98, 0.45);
   box-sizing: border-box;
 }
+.avatar-badge::after { border: none; }
 
 .nick-row {
   position: relative;
