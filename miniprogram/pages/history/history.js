@@ -58,7 +58,7 @@ Page({
         r.kind = 'record';
         r.date = r.doneDate;   // 统一字段名，方便与体重事件一起按日期排序分组
         r.titleText =
-          (r.petAvatar ? r.petAvatar + ' ' : '') +
+          (r.petAvatarImg ? r.petAvatarEmoji + ' ' : (r.petAvatar && r.petAvatar[0] !== '/' ? r.petAvatar + ' ' : '')) +
           (r.petName ? r.petName + '的' : '') +
           r.typeName;
         return r;

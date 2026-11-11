@@ -110,7 +110,7 @@ Page({
       task.icon = style.icon;
       task.theme = style.theme;
       task.titleText =
-        (task.petAvatar ? task.petAvatar + ' ' : '') +
+        (task.petAvatarImg ? task.petAvatarEmoji + ' ' : '') +
         (task.petName ? task.petName + '的' : '') +
         task.typeName;
       if (d < 0) groups.overdue.push(task);
