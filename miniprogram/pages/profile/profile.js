@@ -176,10 +176,14 @@ Page({
         if (f && f.tempFilePath) this.uploadAvatar(f.tempFilePath);
       },
       fail: err => {
-        // 用户取消选图属正常操作，不打扰；仅记录真实错误
-        if (err && err.errMsg && err.errMsg.indexOf('cancel') === -1) {
-          console.error('选择图片失败:', err);
-          wx.showToast({ title: '选择图片失败', icon: 'none' });
+        const msg = (err && err.errMsg) || '';
+        // 用户取消选图属正常操作，不打扰
+        if (msg.indexOf('cancel') !== -1) return;
+        console.error('选择图片失败:', err);
+        if (msg.indexOf('privacy') !== -1 || msg.indexOf('declared') !== -1) {
+          wx.showToast({ title: '小程序后台需先声明「照片或视频」权限', icon: 'none', duration: 3000 });
+        } else {
+          wx.showToast({ title: '选择图片失败: ' + msg, icon: 'none', duration: 3000 });
         }
       }
     });
