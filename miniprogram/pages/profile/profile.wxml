@@ -28,8 +28,7 @@
       <text class="edit-hint">✏️</text>
     </view>
 
-    <view class="login-tag">✅ 已通过微信登录</view>
-    <view class="join-date" wx:if="{{joinedAt}}">加入于 {{joinedAt}}</view>
+    <view class="join-line">✅ 微信登录<block wx:if="{{joinedAt}}"> · 加入于 {{joinedAt}}</block></view>
   </view>
 
   <!-- emoji 头像选择 -->
@@ -65,12 +64,34 @@
     </view>
   </view>
 
-  <!-- 提醒配额 -->
+  <!-- 体重迷你趋势（第一只宠物的最近 5 次） -->
+  <view class="card weight-card" wx:if="{{weightTrend}}" bindtap="goWeightPage">
+    <view class="weight-head">
+      <text class="weight-title">{{weightTrend.petAvatar}} {{weightTrend.petName}}的体重趋势</text>
+      <text class="weight-latest">{{weightTrend.latest}} kg<text class="weight-diff {{weightTrend.diff >= 0 ? 'diff-up' : 'diff-down'}}">{{weightTrend.diff >= 0 ? '▲' : '▼'}} {{weightTrend.diff >= 0 ? weightTrend.diff : -weightTrend.diff}}</text></text>
+    </view>
+    <view class="weight-bars">
+      <view class="wb-item" wx:for="{{weightTrend.bars}}" wx:key="date">
+        <view class="wb-bar" style="height: {{item.h}}rpx;"></view>
+        <text class="wb-val">{{item.value}}</text>
+        <text class="wb-date">{{item.date}}</text>
+      </view>
+    </view>
+    <view class="weight-more">全部记录 ›</view>
+  </view>
+
+  <!-- 提醒配额（圆环可视化剩余量） -->
   <view class="card remind-card">
     <view class="remind-row">
+      <view class="quota-ring" style="background: {{ringStyle}};">
+        <view class="quota-hole">
+          <text class="quota-num">{{quotaLeft}}</text>
+          <text class="quota-unit">条</text>
+        </view>
+      </view>
       <view class="remind-left">
         <view class="remind-title">🔔 可发送提醒</view>
-        <view class="remind-sub">{{quotaLeft}} 条 · 一次性订阅，每次授权可发 1 条</view>
+        <view class="remind-sub">一次性订阅，每次授权可发 1 条</view>
       </view>
       <view class="renew-btn" bindtap="onRenewQuota">续订 +1</view>
     </view>

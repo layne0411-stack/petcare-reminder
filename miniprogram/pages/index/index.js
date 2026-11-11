@@ -43,6 +43,7 @@ Page({
     dateText: '',
     todayCount: 0,
     overdueCount: 0,
+    focusCount: 0,     // 今日关注 = 逾期 + 今天到期
     pets: [],          // 宠物筛选条
     activePetId: 0     // 0 = 全部
   },
@@ -100,7 +101,11 @@ Page({
     const groups = { overdue: [], today: [], upcoming: [], later: [] };
     list.forEach(task => {
       // daysLeft 由服务端按服务器时钟算好返回，前端直接用
-      task.statusText = this.getStatusText(task.daysLeft);
+      const d = task.daysLeft;
+      task.statusText = this.getStatusText(d);
+      // 紧急度：决定卡片左侧色条与右上倒计时徽章的配色
+      task.urgency = d < 0 ? 'overdue' : d === 0 ? 'today' : d <= 7 ? 'soon' : 'later';
+      task.badge = d < 0 ? `逾期 ${-d} 天` : d === 0 ? '今天' : `${d} 天后`;
       const style = styleFor(task.typeName);
       task.icon = style.icon;
       task.theme = style.theme;
@@ -108,9 +113,9 @@ Page({
         (task.petAvatar ? task.petAvatar + ' ' : '') +
         (task.petName ? task.petName + '的' : '') +
         task.typeName;
-      if (task.daysLeft < 0) groups.overdue.push(task);
-      else if (task.daysLeft === 0) groups.today.push(task);
-      else if (task.daysLeft <= 7) groups.upcoming.push(task);
+      if (d < 0) groups.overdue.push(task);
+      else if (d === 0) groups.today.push(task);
+      else if (d <= 7) groups.upcoming.push(task);
       else groups.later.push(task);
     });
     this.setData({
@@ -121,6 +126,7 @@ Page({
       empty: list.length === 0,
       todayCount: groups.today.length,
       overdueCount: groups.overdue.length,
+      focusCount: groups.overdue.length + groups.today.length,
       loading: false
     });
   },

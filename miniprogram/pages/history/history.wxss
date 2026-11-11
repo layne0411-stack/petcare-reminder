@@ -6,10 +6,61 @@
   color: var(--ink-light);
 }
 
-/* ---------- 宠物筛选条（与首页一致） ---------- */
-.pet-filter {
+/* ---------- 顶部统计条 ---------- */
+.stat-bar {
+  display: flex;
+  align-items: center;
+  margin: 0 28rpx 22rpx;
+  padding: 28rpx 0;
+  background: #FFFFFF;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+}
+.sb-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.sb-num {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: var(--peach-deep);
+  line-height: 1.1;
+}
+.sb-label {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: var(--ink-light);
+}
+.sb-divider {
+  width: 2rpx;
+  height: 52rpx;
+  background: var(--line);
+}
+
+/* ---------- 双筛选白卡 ---------- */
+.filter-card { padding: 20rpx 24rpx; }
+.filter-line {
+  display: flex;
+  align-items: flex-start;
+}
+.filter-line + .filter-line {
+  margin-top: 18rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid var(--line);
+}
+.fl-label {
+  flex-shrink: 0;
+  width: 108rpx;
+  padding-top: 12rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--ink-light);
+}
+.fl-chips {
+  flex: 1;
   white-space: nowrap;
-  padding: 0 28rpx 22rpx;
   display: flex;
   align-items: flex-start;   /* 防御：避免子元素被 stretch 拉满容器高度 */
 }
@@ -18,13 +69,12 @@
   align-items: center;
   flex: 0 0 auto;
   align-self: flex-start;
-  padding: 12rpx 28rpx;
-  margin-right: 16rpx;
-  border-radius: 32rpx;
-  background: #FFFFFF;
+  padding: 10rpx 24rpx;
+  margin-right: 14rpx;
+  border-radius: 30rpx;
+  background: #FBF4EA;
   color: var(--ink-light);
-  font-size: 25rpx;
-  box-shadow: var(--shadow-soft);
+  font-size: 24rpx;
   transition: all 0.15s;
 }
 .filter-chip:active { transform: scale(0.95); }
@@ -32,14 +82,45 @@
   background: linear-gradient(135deg, #FFB088, var(--peach));
   color: #ffffff;
   font-weight: 700;
-  box-shadow: 0 8rpx 18rpx rgba(255, 154, 98, 0.32);
+  box-shadow: 0 6rpx 14rpx rgba(255, 154, 98, 0.3);
 }
 
+.type-chip {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  align-self: flex-start;
+  font-size: 24rpx;
+  color: var(--ink-light);
+  background: #FBF4EA;
+  border-radius: 24rpx;
+  padding: 10rpx 24rpx;
+  margin-right: 14rpx;
+}
+.type-active {
+  color: var(--peach-deep);
+  font-weight: 700;
+  background: var(--peach-bg);
+  box-shadow: inset 0 0 0 2rpx rgba(255, 154, 98, 0.4);
+}
+
+/* ---------- 空状态 ---------- */
 .empty {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 150rpx 60rpx;
+  padding: 130rpx 60rpx;
+  overflow: hidden;
+}
+.paw-wm {
+  position: absolute;
+  left: 50%;
+  bottom: 26rpx;
+  transform: translateX(-50%) rotate(-14deg);
+  font-size: 110rpx;
+  opacity: 0.08;
+  pointer-events: none;
 }
 .empty-pet { font-size: 110rpx; transform: rotate(-4deg); }
 .empty-title {
@@ -50,6 +131,55 @@
 }
 .empty-text { margin-top: 12rpx; color: var(--ink-light); font-size: 27rpx; }
 
+/* ---------- 时间轴 ---------- */
+.tl-group {
+  position: relative;
+  margin: 0 28rpx 30rpx;
+  padding-left: 40rpx;
+}
+/* 左侧奶油色竖线 */
+.tl-group::before {
+  content: '';
+  position: absolute;
+  left: 12rpx;
+  top: 18rpx;
+  bottom: -14rpx;
+  width: 4rpx;
+  border-radius: 2rpx;
+  background: var(--line);
+}
+.tl-group:last-child::before { bottom: 40rpx; }
+
+.tl-date-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+/* 日期圆点（普通橙 / 今天绿） */
+.tl-dot {
+  position: absolute;
+  left: -34rpx;
+  width: 22rpx;
+  height: 22rpx;
+  border-radius: 50%;
+  background: var(--peach);
+  border: 5rpx solid #FFF6EC;
+  box-sizing: content-box;
+  box-shadow: 0 3rpx 8rpx rgba(255, 154, 98, 0.4);
+}
+.tl-dot-today { background: var(--mint); box-shadow: 0 3rpx 8rpx rgba(63, 167, 150, 0.4); }
+.tl-date {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+.tl-card {
+  margin: 0 0 18rpx;
+  padding: 24rpx 24rpx 22rpx;
+}
+
+/* ---------- 记录卡内容 ---------- */
 .record-card {
   display: flex;
   align-items: center;
@@ -91,33 +221,7 @@
   border-radius: 18rpx;
   padding: 4rpx 14rpx;
 }
-
-/* ---------- 类型筛选 ---------- */
-.type-filter {
-  display: flex;
-  white-space: nowrap;
-  align-items: flex-start;
-  padding: 0 28rpx 4rpx;
-  margin-bottom: 18rpx;
-}
-.type-chip {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-  align-self: flex-start;
-  font-size: 24rpx;
-  color: var(--ink-light);
-  background: #FBF4EA;
-  border-radius: 24rpx;
-  padding: 10rpx 24rpx;
-  margin-right: 14rpx;
-}
-.type-active {
-  color: var(--peach-deep);
-  font-weight: 700;
-  background: var(--peach-bg);
-  box-shadow: inset 0 0 0 2rpx rgba(255, 154, 98, 0.4);
-}
+.date-tag-weight { color: var(--lavender); background: var(--lavender-bg); }
 
 /* ---------- 记录上的小操作 ---------- */
 .record-ops {

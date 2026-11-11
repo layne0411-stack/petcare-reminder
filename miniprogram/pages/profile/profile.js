@@ -19,11 +19,14 @@ Page({
     taskCount: 0,
     recordCount: 0,
     petCount: 0,
-    quotaLeft: 0
+    quotaLeft: 0,
+    ringStyle: '',      // 配额圆环（conic-gradient）
+    weightTrend: null   // 第一只宠物的体重迷你趋势
   },
 
   onShow() {
     this.loadProfile();
+    this.loadWeightTrend();
   },
 
   onPullDownRefresh() {
@@ -56,11 +59,64 @@ Page({
       recordCount: p.recordCount || 0,
       petCount: p.petCount || 0,
       quotaLeft: p.quotaLeft || 0,
+      ringStyle: this.quotaRing(p.quotaLeft || 0),
       loading: false
     });
     // 供首页问候语使用
     wx.setStorageSync('nickname', p.nickname || '');
     wx.setStorageSync('avatarDataUrl', p.avatarDataUrl || '');
+  },
+
+  /** 配额圆环：以 5 条为满格，画出剩余比例 */
+  quotaRing(quota) {
+    const pct = Math.max(0, Math.min(quota, 5)) / 5;
+    const deg = Math.round(pct * 360);
+    return `conic-gradient(from -90deg, #FFB088 0deg, var(--peach) ${deg}deg, #FFEFE3 ${deg}deg)`;
+  },
+
+  /** 体重迷你趋势：取第一只宠物的最近 5 次记录，画小柱状图 */
+  async loadWeightTrend() {
+    try {
+      const petsRes = await request('/api/pets');
+      const pets = petsRes.list || [];
+      if (!pets.length) {
+        this.setData({ weightTrend: null });
+        return;
+      }
+      const first = pets[0];
+      this._firstPetId = first.id;
+      this._firstPetName = first.name;
+      this._firstPetAvatar = first.avatar;
+      const res = await request(`/api/pets/${first.id}/weights`);
+      const list = (res.list || []).slice(-5);
+      if (list.length < 2) {
+        this.setData({ weightTrend: null });
+        return;
+      }
+      const vals = list.map(w => w.weight);
+      const min = Math.min(...vals);
+      const max = Math.max(...vals);
+      const span = max - min;
+      const bars = list.map(w => ({
+        value: w.weight,
+        date: (w.date || '').slice(5),
+        h: span < 0.01 ? 70 : Math.round(30 + ((w.weight - min) / span) * 70)
+      }));
+      const latest = list[list.length - 1].weight;
+      const diff = Math.round((latest - list[list.length - 2].weight) * 100) / 100;
+      this.setData({
+        weightTrend: {
+          petName: first.name,
+          petAvatar: first.avatar,
+          latest,
+          diff,
+          bars
+        }
+      });
+    } catch (err) {
+      console.warn('体重趋势加载失败:', err);
+      this.setData({ weightTrend: null });
+    }
   },
 
   /** 头像图片加载失败时的兜底：回退成 emoji，避免显示空白 */
@@ -187,6 +243,17 @@ Page({
         }
       }
     });
+  },
+
+  /** 点体重趋势卡：直接进第一只宠物的体重页 */
+  goWeightPage() {
+    if (this._firstPetId) {
+      const name = encodeURIComponent(this._firstPetName || '崽崽');
+      const avatar = encodeURIComponent(this._firstPetAvatar || '🐾');
+      wx.navigateTo({ url: `/pages/pet-weight/pet-weight?id=${this._firstPetId}&name=${name}&avatar=${avatar}` });
+    } else {
+      wx.switchTab({ url: '/pages/pets/pets' });
+    }
   },
 
   /** 续订一次订阅（+1 条发送配额） */

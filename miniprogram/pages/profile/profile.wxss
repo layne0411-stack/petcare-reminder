@@ -108,7 +108,7 @@
 }
 .edit-hint { font-size: 26rpx; margin-left: 10rpx; opacity: 0.7; }
 
-.login-tag {
+.join-line {
   position: relative;
   z-index: 2;
   margin-top: 16rpx;
@@ -117,13 +117,6 @@
   background: rgba(255, 255, 255, 0.8);
   border-radius: 22rpx;
   padding: 6rpx 22rpx;
-}
-.join-date {
-  position: relative;
-  z-index: 2;
-  margin-top: 12rpx;
-  font-size: 22rpx;
-  color: var(--ink-light);
 }
 
 /* ---------- emoji 选择 ---------- */
@@ -214,12 +207,94 @@
 .menu-text { flex: 1; font-size: 29rpx; color: var(--ink); }
 .menu-arrow { font-size: 36rpx; color: var(--ink-light); }
 
-/* ---------- 提醒配额 ---------- */
+/* ---------- 体重迷你趋势卡 ---------- */
+.weight-card { padding: 26rpx 28rpx 22rpx; }
+.weight-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.weight-title { font-size: 28rpx; font-weight: 700; color: var(--ink); }
+.weight-latest {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--peach-deep);
+}
+.weight-diff { font-size: 22rpx; margin-left: 10rpx; font-weight: 600; }
+.diff-up { color: var(--coral); }
+.diff-down { color: var(--mint); }
+.weight-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 22rpx;
+  height: 190rpx;
+  margin-top: 22rpx;
+  padding: 0 6rpx;
+}
+.wb-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+}
+.wb-bar {
+  width: 100%;
+  max-width: 56rpx;
+  border-radius: 16rpx 16rpx 8rpx 8rpx;
+  background: linear-gradient(180deg, #FFB088, var(--peach));
+  opacity: 0.85;
+}
+.wb-item:last-child .wb-bar { opacity: 1; box-shadow: 0 4rpx 12rpx rgba(255, 154, 98, 0.35); }
+.wb-val { margin-top: 8rpx; font-size: 20rpx; color: var(--peach-deep); font-weight: 600; }
+.wb-date { font-size: 19rpx; color: var(--ink-light); margin-top: 2rpx; }
+.weight-more {
+  margin-top: 16rpx;
+  font-size: 23rpx;
+  color: var(--peach-deep);
+  border-top: 1rpx solid var(--line);
+  padding-top: 16rpx;
+}
+
+/* ---------- 提醒配额（圆环可视化剩余量） ---------- */
 .remind-card { padding: 28rpx; }
 .remind-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+.quota-ring {
+  flex-shrink: 0;
+  width: 116rpx;
+  height: 116rpx;
+  border-radius: 50%;
+  margin-right: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(255, 154, 98, 0.18);
+}
+.quota-hole {
+  width: 84rpx;
+  height: 84rpx;
+  border-radius: 50%;
+  background: #FFFFFF;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+}
+.quota-num {
+  font-size: 36rpx;
+  font-weight: 800;
+  color: var(--peach-deep);
+  line-height: 84rpx;
+}
+.quota-unit {
+  font-size: 20rpx;
+  color: var(--ink-light);
+  line-height: 84rpx;
+  margin-left: 4rpx;
 }
 .remind-left { flex: 1; min-width: 0; }
 .remind-title { font-size: 29rpx; font-weight: 700; color: var(--ink); }

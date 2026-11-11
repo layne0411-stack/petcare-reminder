@@ -2,57 +2,99 @@
 <view class="page">
   <view class="page-tip">📖 崽崽的护理小档案</view>
 
-  <!-- 宠物筛选条 -->
-  <scroll-view wx:if="{{pets.length}}" class="pet-filter" scroll-x show-scrollbar="{{false}}">
-    <view
-      class="filter-chip {{activePetId === 0 ? 'filter-active' : ''}}"
-      bindtap="onFilterPet"
-      data-id="0"
-    >🐾 全部 {{total}}</view>
-    <view
-      wx:for="{{pets}}"
-      wx:key="id"
-      class="filter-chip {{activePetId === item.id ? 'filter-active' : ''}}"
-      bindtap="onFilterPet"
-      data-id="{{item.id}}"
-    >{{item.avatar}} {{item.name}}</view>
-  </scroll-view>
+  <!-- 顶部统计条 -->
+  <view class="stat-bar">
+    <view class="sb-item">
+      <text class="sb-num">{{total}}</text>
+      <text class="sb-label">累计打卡</text>
+    </view>
+    <view class="sb-divider"></view>
+    <view class="sb-item">
+      <text class="sb-num">{{monthCount}}</text>
+      <text class="sb-label">本月记录</text>
+    </view>
+    <view class="sb-divider"></view>
+    <view class="sb-item">
+      <text class="sb-num">🔥 {{streak}}</text>
+      <text class="sb-label">连续天数</text>
+    </view>
+  </view>
 
-  <!-- 类型筛选 -->
-  <scroll-view wx:if="{{typeChips.length > 1}}" class="type-filter" scroll-x show-scrollbar="{{false}}">
-    <view
-      class="type-chip {{activeType === '' ? 'type-active' : ''}}"
-      bindtap="onFilterType"
-      data-type=""
-    >全部类型</view>
-    <view
-      wx:for="{{typeChips}}"
-      wx:key="*this"
-      class="type-chip {{activeType === item ? 'type-active' : ''}}"
-      bindtap="onFilterType"
-      data-type="{{item}}"
-    >{{item}}</view>
-  </scroll-view>
+  <!-- 双筛选白卡 -->
+  <view class="card filter-card">
+    <view class="filter-line">
+      <text class="fl-label">🐾 宠物</text>
+      <scroll-view class="fl-chips" scroll-x show-scrollbar="{{false}}">
+        <view
+          class="filter-chip {{activePetId === 0 ? 'filter-active' : ''}}"
+          bindtap="onFilterPet"
+          data-id="0"
+        >全部</view>
+        <view
+          wx:for="{{pets}}"
+          wx:key="id"
+          class="filter-chip {{activePetId === item.id ? 'filter-active' : ''}}"
+          bindtap="onFilterPet"
+          data-id="{{item.id}}"
+        >{{item.avatar}} {{item.name}}</view>
+      </scroll-view>
+    </view>
+    <view class="filter-line" wx:if="{{typeChips.length > 1}}">
+      <text class="fl-label">🏷 类型</text>
+      <scroll-view class="fl-chips" scroll-x show-scrollbar="{{false}}">
+        <view
+          class="type-chip {{activeType === '' ? 'type-active' : ''}}"
+          bindtap="onFilterType"
+          data-type=""
+        >全部类型</view>
+        <view
+          wx:for="{{typeChips}}"
+          wx:key="*this"
+          class="type-chip {{activeType === item ? 'type-active' : ''}}"
+          bindtap="onFilterType"
+          data-type="{{item}}"
+        >{{item}}</view>
+      </scroll-view>
+    </view>
+  </view>
 
+  <!-- 空状态 -->
   <view wx:if="{{empty && !loading}}" class="empty">
+    <view class="paw-wm">🐾</view>
     <text class="empty-pet">😺</text>
     <text class="empty-title">{{activePetId || activeType ? '这个筛选下还没有记录' : '还没有记录哦'}}</text>
     <text class="empty-text">去首页完成一次打卡吧</text>
   </view>
 
-  <view class="card record-card" wx:for="{{records}}" wx:key="id">
-    <view class="record-icon theme-{{item.theme}}"><text>{{item.icon}}</text></view>
-    <view class="record-left">
-      <view class="record-title">{{item.titleText}}</view>
-      <view class="record-note" wx:if="{{item.note}}">{{item.note}}</view>
-      <view class="record-ops">
-        <view class="op-btn" catchtap="onEditDate" data-id="{{item.id}}">✎ 改日期</view>
-        <view class="op-btn op-danger" catchtap="onDeleteRecord" data-id="{{item.id}}">✕ 撤销</view>
-      </view>
+  <!-- 时间轴：按天分组 -->
+  <view class="tl-group" wx:for="{{groups}}" wx:for-item="g" wx:key="date">
+    <view class="tl-date-row">
+      <view class="tl-dot {{g.isToday ? 'tl-dot-today' : ''}}"></view>
+      <text class="tl-date">{{g.label}}</text>
     </view>
-    <view class="record-date">
-      <view class="date-day">{{item.doneDate}}</view>
-      <view class="date-tag">✓ 已完成</view>
+    <view class="card tl-card" wx:for="{{g.items}}" wx:for-item="ev" wx:key="key">
+      <view class="record-icon theme-{{ev.theme}}"><text>{{ev.icon}}</text></view>
+      <view class="record-left">
+        <view class="record-title">{{ev.titleText}}</view>
+        <view class="record-note" wx:if="{{ev.note}}">{{ev.note}}</view>
+        <view class="record-ops" wx:if="{{ev.kind === 'record'}}">
+          <view class="op-btn" catchtap="onEditDate" data-id="{{ev.id}}">✎ 改日期</view>
+          <view class="op-btn op-danger" catchtap="onDeleteRecord" data-id="{{ev.id}}">✕ 撤销</view>
+        </view>
+        <view class="record-ops" wx:else>
+          <view class="op-btn op-danger" catchtap="onDeleteWeight" data-id="{{ev.id}}">✕ 删除</view>
+        </view>
+      </view>
+      <view class="record-date">
+        <block wx:if="{{ev.kind === 'record'}}">
+          <view class="date-day">{{ev.doneDate}}</view>
+          <view class="date-tag">✓ 已完成</view>
+        </block>
+        <block wx:else>
+          <view class="date-day">{{ev.weight}} kg</view>
+          <view class="date-tag date-tag-weight">⚖️ 体重</view>
+        </block>
+      </view>
     </view>
   </view>
 

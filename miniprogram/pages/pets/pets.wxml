@@ -8,14 +8,15 @@
 
   <!-- 空状态 -->
   <view wx:if="{{!loading && !pets.length}}" class="empty">
+    <view class="paw-wm">🐾</view>
     <text class="empty-emoji">🐶🐱</text>
     <text class="empty-title">还没有宠物档案</text>
     <text class="empty-text">建立档案后，每只崽崽的驱虫、体检、洗澡计划都会分开记录</text>
   </view>
 
-  <!-- 宠物卡片 -->
+  <!-- 宠物卡片（skin-N：每只专属浅色渐变底，提升辨识度） -->
   <view
-    class="pet-card"
+    class="pet-card skin-{{index % 4}}"
     wx:for="{{pets}}"
     wx:key="id"
     bindtap="goEdit"

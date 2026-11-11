@@ -15,9 +15,12 @@
       <text class="hero-hi">{{greeting}}</text>
       <text class="hero-date">{{dateText}}</text>
     </view>
-    <view class="hero-stats" wx:if="{{todayCount || overdueCount}}">
-      <view class="stat-chip" wx:if="{{overdueCount}}"><text class="stat-num">{{overdueCount}}</text> 项逾期待处理</view>
-      <view class="stat-chip stat-chip-mint" wx:if="{{todayCount}}"><text class="stat-num">{{todayCount}}</text> 项今天到期</view>
+    <view class="hero-stats" wx:if="{{focusCount}}">
+      <view class="focus-pill">
+        <text class="focus-emoji">👀</text> 今日关注 <text class="focus-num">{{focusCount}}</text> 项
+      </view>
+      <view class="stat-chip" wx:if="{{overdueCount}}"><text class="stat-num">{{overdueCount}}</text> 逾期</view>
+      <view class="stat-chip stat-chip-mint" wx:if="{{todayCount}}"><text class="stat-num">{{todayCount}}</text> 今天</view>
     </view>
   </view>
 
@@ -39,6 +42,7 @@
 
   <!-- 空状态 -->
   <view wx:if="{{empty && !loading}}" class="empty">
+    <view class="paw-wm">🐾</view>
     <text class="empty-pet">🐕‍🦺</text>
     <text class="empty-pet-cat">🐈</text>
     <block wx:if="{{activePetId}}">
@@ -53,8 +57,13 @@
 
   <!-- 已到期 -->
   <block wx:if="{{overdueList.length}}">
-    <view class="section-title">🍓 需要马上处理</view>
-    <view class="card task-card" wx:for="{{overdueList}}" wx:key="id">
+    <view class="section-row">
+      <text class="section-title">🍓 需要马上处理</text>
+      <view class="section-count">{{overdueList.length}}</view>
+      <view class="section-line"></view>
+    </view>
+    <view class="card task-card bar-{{item.urgency}}" wx:for="{{overdueList}}" wx:key="id">
+      <view class="due-badge due-coral">{{item.badge}}</view>
       <view class="task-icon theme-{{item.theme}}"><text>{{item.icon}}</text></view>
       <view class="task-main" bindtap="goEdit" data-id="{{item.id}}">
         <view class="task-title">{{item.titleText}}</view>
@@ -70,8 +79,13 @@
 
   <!-- 今天到期 -->
   <block wx:if="{{todayList.length}}">
-    <view class="section-title">🎉 今天到期</view>
-    <view class="card task-card" wx:for="{{todayList}}" wx:key="id">
+    <view class="section-row">
+      <text class="section-title">🎉 今天到期</text>
+      <view class="section-count">{{todayList.length}}</view>
+      <view class="section-line"></view>
+    </view>
+    <view class="card task-card bar-{{item.urgency}}" wx:for="{{todayList}}" wx:key="id">
+      <view class="due-badge due-peach">{{item.badge}}</view>
       <view class="task-icon theme-{{item.theme}}"><text>{{item.icon}}</text></view>
       <view class="task-main" bindtap="goEdit" data-id="{{item.id}}">
         <view class="task-title">{{item.titleText}}</view>
@@ -87,8 +101,13 @@
 
   <!-- 7 天内 -->
   <block wx:if="{{upcomingList.length}}">
-    <view class="section-title">🗓 即将到来</view>
-    <view class="card task-card" wx:for="{{upcomingList}}" wx:key="id">
+    <view class="section-row">
+      <text class="section-title">🗓 即将到来</text>
+      <view class="section-count">{{upcomingList.length}}</view>
+      <view class="section-line"></view>
+    </view>
+    <view class="card task-card bar-{{item.urgency}}" wx:for="{{upcomingList}}" wx:key="id">
+      <view class="due-badge due-butter">{{item.badge}}</view>
       <view class="task-icon theme-{{item.theme}}"><text>{{item.icon}}</text></view>
       <view class="task-main" bindtap="goEdit" data-id="{{item.id}}">
         <view class="task-title">{{item.titleText}}</view>
@@ -104,8 +123,13 @@
 
   <!-- 更远 -->
   <block wx:if="{{laterList.length}}">
-    <view class="section-title">🌿 安排好了的</view>
-    <view class="card task-card" wx:for="{{laterList}}" wx:key="id">
+    <view class="section-row">
+      <text class="section-title">🌿 安排好了的</text>
+      <view class="section-count">{{laterList.length}}</view>
+      <view class="section-line"></view>
+    </view>
+    <view class="card task-card bar-{{item.urgency}}" wx:for="{{laterList}}" wx:key="id">
+      <view class="due-badge due-mint">{{item.badge}}</view>
       <view class="task-icon theme-{{item.theme}}"><text>{{item.icon}}</text></view>
       <view class="task-main" bindtap="goEdit" data-id="{{item.id}}">
         <view class="task-title">{{item.titleText}}</view>

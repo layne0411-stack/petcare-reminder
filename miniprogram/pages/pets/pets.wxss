@@ -33,6 +33,7 @@
 
 /* ---------- 宠物卡片 ---------- */
 .pet-card {
+  position: relative;
   display: flex;
   align-items: center;
   margin: 0 28rpx 24rpx;
@@ -40,8 +41,14 @@
   background: var(--card);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-soft);
+  overflow: hidden;
   transition: transform 0.15s;
 }
+/* 每只崽崽专属浅色渐变底（按顺序循环 4 款马卡龙色） */
+.skin-0 { background: linear-gradient(150deg, #FFF3E7 0%, #FFE9DC 100%); }
+.skin-1 { background: linear-gradient(150deg, #F0FAF6 0%, #E2F6EF 100%); }
+.skin-2 { background: linear-gradient(150deg, #FFF9E6 0%, #FFF3D6 100%); }
+.skin-3 { background: linear-gradient(150deg, #F4F0FC 0%, #EFE9FB 100%); }
 .pet-card:active { transform: scale(0.985); }
 
 .pet-avatar {
@@ -100,6 +107,7 @@
 
 /* ---------- 空状态 ---------- */
 .empty {
+  position: relative;
   margin: 60rpx 28rpx;
   padding: 70rpx 40rpx;
   background: var(--card);
@@ -108,6 +116,17 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  overflow: hidden;
+}
+/* 空状态脚印水印 */
+.paw-wm {
+  position: absolute;
+  left: 50%;
+  bottom: 16rpx;
+  transform: translateX(-50%) rotate(-14deg);
+  font-size: 110rpx;
+  opacity: 0.08;
+  pointer-events: none;
 }
 .empty-emoji { font-size: 88rpx; letter-spacing: 12rpx; }
 .empty-title {
