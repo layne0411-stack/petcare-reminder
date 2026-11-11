@@ -112,17 +112,9 @@ Page({
     }
   },
 
-  /** 使用微信头像（官方头像昵称填写能力，个人主体可用） */
-  // 角标不拦截头像按钮的 chooseAvatar（catchtap 已阻断冒泡），给个轻提示
-  onChooseWechatAvatar(e) {
-    const tempPath = e.detail && e.detail.avatarUrl;
-    if (!tempPath) {
-      // 未同意隐私保护指引时，微信不会返回头像临时路径
-      wx.showToast({ title: '需先同意隐私保护指引才能使用微信头像', icon: 'none' });
-      return;
-    }
+  /** 统一上传：读取本地图片转 base64 提交服务端（微信头像 / 相册选图共用） */
+  uploadAvatar(tempPath) {
     wx.showLoading({ title: '上传中', mask: true });
-
     wx.getFileSystemManager().readFile({
       filePath: tempPath,
       encoding: 'base64',
@@ -157,6 +149,38 @@ Page({
         wx.hideLoading();
         console.error('读取头像失败:', err);
         wx.showToast({ title: '读取图片失败', icon: 'none' });
+      }
+    });
+  },
+
+  /** 使用微信头像（官方头像昵称填写能力，个人主体可用） */
+  onChooseWechatAvatar(e) {
+    const tempPath = e.detail && e.detail.avatarUrl;
+    if (!tempPath) {
+      // 未同意隐私保护指引时，微信不会返回头像临时路径
+      wx.showToast({ title: '需先同意隐私保护指引才能使用微信头像', icon: 'none' });
+      return;
+    }
+    this.uploadAvatar(tempPath);
+  },
+
+  /** 点相机角标：拍照或从相册选一张图作为头像 */
+  onPickAlbum() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['album', 'camera'],
+      sizeType: ['compressed'],
+      success: res => {
+        const f = res.tempFiles && res.tempFiles[0];
+        if (f && f.tempFilePath) this.uploadAvatar(f.tempFilePath);
+      },
+      fail: err => {
+        // 用户取消选图属正常操作，不打扰；仅记录真实错误
+        if (err && err.errMsg && err.errMsg.indexOf('cancel') === -1) {
+          console.error('选择图片失败:', err);
+          wx.showToast({ title: '选择图片失败', icon: 'none' });
+        }
       }
     });
   },

@@ -18,13 +18,9 @@
           <text wx:else class="avatar-emoji">{{avatar}}</text>
         </view>
       </button>
-      <!-- 相机角标：独立 chooseAvatar 按钮，点它同样唤起微信头像选择；
-           兄弟节点定位不受头像按钮圆形裁剪，样式已完整重置 button 默认值 -->
-      <button
-        class="avatar-badge"
-        open-type="chooseAvatar"
-        bindchooseavatar="onChooseWechatAvatar"
-      >📷</button>
+      <!-- 相机角标：view 兄弟节点（微信 button 在真机上无法稳定重置样式，两次拉宽崩坏，
+           故不再用 button 承载角标）。点击走 wx.chooseMedia 选图上传，点头像则走微信头像快捷选择 -->
+      <view class="avatar-badge" catchtap="onPickAlbum">📷</view>
     </view>
 
     <view class="nick-row" bindtap="onEditNickname">
