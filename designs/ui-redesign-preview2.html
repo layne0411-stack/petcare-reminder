@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>崽崽打卡站 · UI 优化效果图（二）记录页 / 我的页</title>
+<style>
+:root {
+  --cream: #FFF6EC;
+  --cream-deep: #FBEEDD;
+  --peach: #FF9A62;
+  --peach-deep: #F07B3F;
+  --peach-soft: #FFE0C2;
+  --ink: #4A3B2E;
+  --ink-light: #9C8A78;
+  --card: #FFFFFF;
+  --green: #7FB069;
+  --yellow: #F2B84B;
+  --shadow-soft: 0 8px 24px rgba(214, 158, 106, 0.16);
+  --shadow-lift: 0 14px 34px rgba(214, 158, 106, 0.24);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(160deg, #FFF3E4 0%, #FFE9D2 55%, #FDDDC0 100%);
+  color: var(--ink);
+  min-height: 100vh;
+  padding: 48px 40px 72px;
+  position: relative;
+  overflow-x: auto;
+}
+body::before, body::after {
+  content: "🐾"; position: fixed; font-size: 120px; opacity: .06; pointer-events: none; z-index: 0;
+}
+body::before { top: -20px; left: -10px; transform: rotate(-24deg); }
+body::after { bottom: -30px; right: 2%; transform: rotate(18deg); }
+
+.intro { max-width: 1100px; margin: 0 auto 40px; position: relative; z-index: 1; }
+.intro h1 { font-size: 30px; letter-spacing: 1px; display: flex; align-items: center; gap: 12px; }
+.intro h1 .paw { font-size: 34px; }
+.intro p.sub { margin-top: 10px; font-size: 14.5px; color: var(--ink-light); line-height: 1.8; max-width: 760px; }
+.style-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.style-chips span {
+  background: rgba(255,255,255,.75); border: 1px solid rgba(240,123,63,.18);
+  padding: 7px 16px; border-radius: 999px; font-size: 12.5px; color: var(--peach-deep);
+  box-shadow: 0 3px 10px rgba(214,158,106,.12);
+}
+
+.phones { display: flex; gap: 60px; align-items: flex-start; position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; }
+.phone-col { flex: 0 0 auto; width: 348px; }
+.phone {
+  width: 348px; height: 742px; background: var(--cream); border-radius: 46px;
+  border: 10px solid #3E3428;
+  box-shadow: 0 30px 60px rgba(74,59,46,.28), inset 0 0 0 2px rgba(255,255,255,.6);
+  overflow: hidden; position: relative;
+}
+.screen { position: absolute; inset: 0; overflow-y: auto; scrollbar-width: none; }
+.screen::-webkit-scrollbar { display: none; }
+.statusbar { display: flex; justify-content: space-between; align-items: center; padding: 14px 26px 6px; font-size: 13px; font-weight: 600; }
+.statusbar .icons { letter-spacing: 2px; font-size: 12px; }
+.caption { margin-top: 16px; }
+.caption h3 { font-size: 16px; display: flex; align-items: center; gap: 8px; }
+.caption h3 .tag { font-size: 11px; background: var(--peach); color: #fff; border-radius: 999px; padding: 3px 10px; font-weight: normal; }
+.caption p { margin-top: 7px; font-size: 12.5px; color: var(--ink-light); line-height: 1.75; }
+.caption p b { color: var(--peach-deep); font-weight: 600; }
+
+.page-title { padding: 20px 22px 4px; display: flex; align-items: center; justify-content: space-between; }
+.page-title h2 { font-size: 21px; letter-spacing: 1px; }
+.stat-strip {
+  margin: 10px 18px 0; background: linear-gradient(130deg, #FFF2E2, #FFE4CB);
+  border-radius: 18px; padding: 12px 18px; display: flex; box-shadow: var(--shadow-soft);
+}
+.stat-strip .s { flex: 1; text-align: center; }
+.stat-strip .s + .s { border-left: 1px solid rgba(240,123,63,.2); }
+.stat-strip .s b { font-size: 16px; color: var(--peach-deep); }
+.stat-strip .s i { display: block; font-style: normal; font-size: 10.5px; color: var(--ink-light); margin-top: 2px; }
+
+/* 筛选区 */
+.filter-block { margin: 14px 18px 0; background: #fff; border-radius: 20px; padding: 13px 14px; box-shadow: var(--shadow-soft); }
+.filter-row { display: flex; align-items: center; gap: 8px; }
+.filter-row + .filter-row { margin-top: 10px; }
+.filter-row .f-name { flex: 0 0 46px; font-size: 11.5px; color: var(--ink-light); font-weight: 600; }
+.f-chips { display: flex; gap: 7px; overflow: hidden; }
+.f-chip {
+  flex: 0 0 auto; padding: 5px 12px; border-radius: 999px; font-size: 12px;
+  background: var(--cream); color: var(--ink-light);
+}
+.f-chip.active { background: linear-gradient(120deg, var(--peach), var(--peach-deep)); color: #fff; font-weight: 700; box-shadow: 0 4px 10px rgba(240,123,63,.3); }
+
+/* 时间轴 */
+.timeline { padding: 4px 18px 0 30px; position: relative; }
+.timeline::before {
+  content: ""; position: absolute; left: 37px; top: 14px; bottom: 30px;
+  width: 2.5px; border-radius: 2px;
+  background: linear-gradient(180deg, var(--peach-soft), rgba(255,224,194,.25));
+}
+.t-day { position: relative; margin-bottom: 6px; }
+.t-dot {
+  position: absolute; left: -19px; top: 7px; width: 13px; height: 13px; border-radius: 50%;
+  background: #fff; border: 3.5px solid var(--peach); box-shadow: 0 0 0 3px rgba(255,224,194,.5);
+}
+.t-dot.done { border-color: var(--green); }
+.t-date { font-size: 12px; font-weight: 800; color: var(--ink); letter-spacing: .5px; }
+.t-date small { font-weight: normal; color: var(--ink-light); margin-left: 7px; font-size: 11px; }
+.rec-card {
+  margin: 8px 0 12px; background: var(--card); border-radius: 20px; padding: 13px 15px;
+  display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow-soft); position: relative; overflow: hidden;
+}
+.rec-card::before { content: ""; position: absolute; left: 0; top: 16%; bottom: 16%; width: 4px; border-radius: 0 5px 5px 0; background: var(--bar, var(--green)); }
+.rec-emoji {
+  width: 42px; height: 42px; border-radius: 14px; background: var(--emoji-bg, #EAF3E2);
+  display: flex; align-items: center; justify-content: center; font-size: 21px; flex: 0 0 auto;
+}
+.rec-main { flex: 1; min-width: 0; }
+.rec-main .r-name { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 7px; }
+.rec-main .r-name .pet { font-size: 10.5px; font-weight: 600; color: var(--peach-deep); background: var(--peach-soft); border-radius: 999px; padding: 2px 8px; }
+.rec-main .r-sub { margin-top: 4px; font-size: 11.5px; color: var(--ink-light); }
+.rec-main .r-sub .memo { color: #B08850; }
+.rec-acts { display: flex; gap: 7px; flex: 0 0 auto; }
+.r-btn {
+  width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer;
+  font-size: 13px; display: flex; align-items: center; justify-content: center;
+}
+.r-btn.edit { background: #fff; border: 1.5px solid var(--peach-soft); color: var(--peach-deep); }
+.r-btn.undo { background: #F5F0E8; color: #B5A897; }
+.empty-tip {
+  margin: 4px 18px 12px; border: 2px dashed rgba(240,123,63,.35); border-radius: 20px;
+  padding: 18px; text-align: center; color: var(--ink-light); font-size: 12.5px; background: rgba(255,224,194,.2);
+}
+.empty-tip .big { font-size: 30px; display: block; margin-bottom: 6px; opacity: .8; }
+.load-more { text-align: center; font-size: 12px; color: var(--ink-light); padding: 4px 0 10px; }
+
+.tabbar {
+  position: sticky; bottom: 0; margin-top: 14px;
+  background: rgba(255,252,247,.92); backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(214,158,106,.15);
+  display: flex; padding: 9px 6px 16px;
+}
+.tab { flex: 1; text-align: center; font-size: 10.5px; color: var(--ink-light); }
+.tab .t-icon { font-size: 21px; line-height: 1.3; display: block; filter: grayscale(1) opacity(.45); }
+.tab.active { color: var(--peach-deep); font-weight: 700; }
+.tab.active .t-icon { filter: none; }
+
+/* 我的页 */
+.me-hero {
+  margin: 6px 18px 0; border-radius: 26px; padding: 22px 18px 0;
+  background: linear-gradient(150deg, #FFF9EF, #FFECD9);
+  box-shadow: var(--shadow-soft); text-align: center; position: relative; overflow: hidden;
+}
+.me-hero .paw-deco { position: absolute; font-size: 44px; opacity: .09; }
+.me-hero .paw-deco.p1 { left: 10px; top: 10px; transform: rotate(-24deg); }
+.me-hero .paw-deco.p2 { right: 14px; top: 44px; transform: rotate(20deg); }
+.avatar-lg {
+  width: 88px; height: 88px; border-radius: 50%; background: #fff; margin: 0 auto;
+  display: flex; align-items: center; justify-content: center; font-size: 44px; font-weight: 800;
+  box-shadow: 0 0 0 5px #fff, 0 0 0 7.5px var(--peach-soft), 0 10px 22px rgba(214,158,106,.3);
+  position: relative; color: var(--ink);
+}
+.avatar-lg .cam {
+  position: absolute; right: -4px; bottom: -2px; width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--peach), var(--peach-deep));
+  border: 3px solid #fff; font-size: 13px; display: flex; align-items: center; justify-content: center;
+}
+.me-name { margin-top: 12px; font-size: 18px; font-weight: 800; }
+.login-tag {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 9px;
+  font-size: 11.5px; color: #5D8F49; background: rgba(127,176,105,.14);
+  padding: 5px 13px; border-radius: 999px; font-weight: 600;
+}
+.me-stats {
+  margin-top: 16px; background: rgba(255,255,255,.8); border-radius: 20px 20px 0 0;
+  display: flex; padding: 13px 0 15px;
+}
+.me-stats .s { flex: 1; }
+.me-stats .s + .s { border-left: 1px solid rgba(214,158,106,.18); }
+.me-stats .s b { font-size: 18px; color: var(--peach-deep); }
+.me-stats .s i { display: block; font-style: normal; font-size: 11px; color: var(--ink-light); margin-top: 3px; }
+.quota-card {
+  margin: 16px 18px 0; border-radius: 22px; padding: 17px 18px;
+  background: linear-gradient(130deg, #FFF2E2, #FFE4CB); box-shadow: var(--shadow-soft);
+  display: flex; align-items: center; gap: 15px;
+}
+.ring {
+  width: 58px; height: 58px; border-radius: 50%; flex: 0 0 auto;
+  background: conic-gradient(var(--peach-deep) 0 60%, rgba(255,255,255,.75) 60% 100%);
+  display: flex; align-items: center; justify-content: center;
+}
+.ring i {
+  width: 44px; height: 44px; border-radius: 50%; background: #FFF6EC; font-style: normal;
+  display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: var(--peach-deep);
+}
+.quota-main { flex: 1; }
+.quota-main .q-t { font-size: 14.5px; font-weight: 700; }
+.quota-main .q-d { margin-top: 4px; font-size: 11.5px; color: var(--ink-light); line-height: 1.6; }
+.quota-btn {
+  flex: 0 0 auto; border: none; cursor: pointer; padding: 9px 15px; border-radius: 999px;
+  background: linear-gradient(120deg, var(--peach), var(--peach-deep)); color: #fff;
+  font-size: 12.5px; font-weight: 700; box-shadow: 0 5px 14px rgba(240,123,63,.35);
+}
+.weight-card {
+  margin: 14px 18px 0; background: var(--card); border-radius: 22px; padding: 16px 18px;
+  box-shadow: var(--shadow-soft);
+}
+.weight-head { display: flex; justify-content: space-between; align-items: center; }
+.weight-head .w-t { font-size: 14px; font-weight: 700; }
+.weight-head .w-link { font-size: 11.5px; color: var(--peach-deep); font-weight: 600; }
+.w-bars { display: flex; align-items: flex-end; gap: 10px; height: 64px; margin-top: 12px; padding: 0 4px; }
+.w-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+.w-col i {
+  display: block; width: 16px; border-radius: 6px 6px 3px 3px;
+  background: linear-gradient(180deg, var(--peach) 0%, var(--peach-deep) 100%);
+}
+.w-col:first-child i { background: linear-gradient(180deg, #F2B84B, #E09E2C); }
+.w-col small { font-size: 9px; color: var(--ink-light); }
+.weight-foot { margin-top: 10px; font-size: 11.5px; color: var(--ink-light); display: flex; justify-content: space-between; }
+.weight-foot b { color: var(--ink); }
+.weight-foot .up { color: var(--red); }
+.menu-card { margin: 16px 18px 0; background: var(--card); border-radius: 22px; overflow: hidden; box-shadow: var(--shadow-soft); }
+.menu-item { display: flex; align-items: center; gap: 12px; padding: 15px 18px; font-size: 14px; font-weight: 600; }
+.menu-item + .menu-item { border-top: 1px solid rgba(214,158,106,.14); }
+.menu-item .m-ico {
+  width: 34px; height: 34px; border-radius: 12px; background: var(--cream);
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+}
+.menu-item .arr { margin-left: auto; color: #D8C6B2; }
+
+.summary {
+  max-width: 1100px; margin: 56px auto 0; position: relative; z-index: 1;
+  background: rgba(255,255,255,.7); border: 1px solid rgba(240,123,63,.15);
+  border-radius: 26px; padding: 30px 36px; box-shadow: var(--shadow-lift); backdrop-filter: blur(6px);
+}
+.summary h2 { font-size: 20px; display: flex; align-items: center; gap: 10px; }
+.summary-grid { margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.sum-item { display: flex; gap: 12px; align-items: flex-start; }
+.sum-item .no {
+  flex: 0 0 auto; width: 26px; height: 26px; border-radius: 9px; font-size: 13px; font-weight: 800;
+  background: linear-gradient(135deg, var(--peach), var(--peach-deep)); color: #fff;
+  display: flex; align-items: center; justify-content: center; margin-top: 1px;
+}
+.sum-item p { font-size: 13.5px; line-height: 1.7; }
+.sum-item p b { color: var(--peach-deep); }
+.sum-item p small { display: block; color: var(--ink-light); font-size: 12px; margin-top: 2px; }
+.summary .foot { margin-top: 22px; font-size: 12.5px; color: var(--ink-light); }
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <h1><span class="paw">📖</span> 崽崽打卡站 · UI 优化效果图（二）</h1>
+  <p class="sub">记录页与我的页的优化稿。风格仍为零变更：奶油白 × 蜜桃橙 × 纯 CSS + emoji。记录页主打「时间轴」叙事——打卡历史像日记一样按天铺开；我的页在上一版基础上补充了体重趋势卡入口。</p>
+  <div class="style-chips">
+    <span>🎨 主色 #FF9A62 不变</span><span>🌼 背景 #FFF6EC 不变</span>
+    <span>🚫 零切图</span><span>📐 沿用现有 CSS 变量体系</span>
+  </div>
+</div>
+
+<div class="phones">
+
+  <!-- ═══════════ 记录页 ═══════════ -->
+  <div class="phone-col">
+    <div class="phone"><div class="screen">
+      <div class="statusbar"><span>9:41</span><span class="icons">📶 🔋</span></div>
+      <div class="page-title"><h2>📖 打卡记录</h2></div>
+      <div class="stat-strip">
+        <div class="s"><b>26</b><i>累计打卡</i></div>
+        <div class="s"><b>8</b><i>本月记录</i></div>
+        <div class="s"><b>11</b><i>连续天数</i></div>
+      </div>
+      <div class="filter-block">
+        <div class="filter-row">
+          <span class="f-name">🐾 宠物</span>
+          <div class="f-chips">
+            <span class="f-chip active">全部</span><span class="f-chip">元宝</span>
+            <span class="f-chip">豆豆</span><span class="f-chip">团子</span>
+          </div>
+        </div>
+        <div class="filter-row">
+          <span class="f-name">🏷️ 类型</span>
+          <div class="f-chips">
+            <span class="f-chip active">全部</span><span class="f-chip">💊 驱虫</span>
+            <span class="f-chip">💉 疫苗</span><span class="f-chip">🩺 体检</span>
+          </div>
+        </div>
+      </div>
+      <div class="timeline">
+        <div class="t-day">
+          <span class="t-dot done"></span>
+          <div class="t-date">11 月 11 日 · 今天<small>2 条记录</small></div>
+          <div class="rec-card" style="--bar: var(--green);">
+            <div class="rec-emoji" style="background:#EAF3E2;">🚰</div>
+            <div class="rec-main">
+              <div class="r-name">更换饮水滤芯 <span class="pet">全家</span></div>
+              <div class="r-sub">下次到期 12-11 · <span class="memo">备注：顺便清洗了水槽</span></div>
+            </div>
+            <div class="rec-acts">
+              <button class="r-btn edit">✎</button>
+              <button class="r-btn undo">✕</button>
+            </div>
+          </div>
+          <div class="rec-card" style="--bar: var(--green);">
+            <div class="rec-emoji" style="background:#EAF3E2;">💊</div>
+            <div class="rec-main">
+              <div class="r-name">体内驱虫 <span class="pet">元宝</span></div>
+              <div class="r-sub">下次到期 12-11</div>
+            </div>
+            <div class="rec-acts">
+              <button class="r-btn edit">✎</button>
+              <button class="r-btn undo">✕</button>
+            </div>
+          </div>
+        </div>
+        <div class="t-day">
+          <span class="t-dot"></span>
+          <div class="t-date">11 月 8 日<small>1 条记录</small></div>
+          <div class="rec-card" style="--bar: var(--yellow);">
+            <div class="rec-emoji" style="background:#FDF3DC;">🛁</div>
+            <div class="rec-main">
+              <div class="r-name">洗澡 <span class="pet">豆豆</span></div>
+              <div class="r-sub">下次到期 12-08 · <span class="memo">备注：吹风时有点闹</span></div>
+            </div>
+            <div class="rec-acts">
+              <button class="r-btn edit">✎</button>
+              <button class="r-btn undo">✕</button>
+            </div>
+          </div>
+        </div>
+        <div class="t-day">
+          <span class="t-dot"></span>
+          <div class="t-date">11 月 2 日<small>1 条记录</small></div>
+          <div class="rec-card" style="--bar: var(--yellow);">
+            <div class="rec-emoji" style="background:#FDF3DC;">⚖️</div>
+            <div class="rec-main">
+              <div class="r-name">体重记录 <span class="pet">团子</span></div>
+              <div class="r-sub">1.8kg · 比上次 ↑ 0.1kg</div>
+            </div>
+            <div class="rec-acts">
+              <button class="r-btn edit">✎</button>
+              <button class="r-btn undo">✕</button>
+            </div>
+          </div>
+        </div>
+        <div class="load-more">— 上滑加载更早的记录 —</div>
+      </div>
+      <div class="tabbar">
+        <div class="tab"><span class="t-icon">🏠</span>任务</div>
+        <div class="tab"><span class="t-icon">🐾</span>宠物</div>
+        <div class="tab active"><span class="t-icon">📖</span>记录</div>
+        <div class="tab"><span class="t-icon">🙂</span>我的</div>
+      </div>
+    </div></div>
+    <div class="caption">
+      <h3>记录页 · 打卡历史 <span class="tag">时间轴方案</span></h3>
+      <p><b>① 顶部统计条</b>（累计 / 本月 / 连续天数）先给全貌；<b>② 双筛选收进一张白卡</b>，行内标签「宠物 / 类型」更清楚；<b>③ 按天分组的竖向时间轴</b>，圆点橙=普通、绿=今日，打卡历史像日记本；<b>④ 改日期 ✎ 与撤销 ✕</b>保留圆钮样式，体重记录也汇入时间轴。</p>
+    </div>
+  </div>
+
+  <!-- ═══════════ 我的页 ═══════════ -->
+  <div class="phone-col">
+    <div class="phone"><div class="screen">
+      <div class="statusbar"><span>9:41</span><span class="icons">📶 🔋</span></div>
+      <div class="me-hero">
+        <span class="paw-deco p1">🐾</span><span class="paw-deco p2">🐾</span>
+        <div class="avatar-lg">179<span class="cam">📷</span></div>
+        <div class="me-name">1layne ✏️</div>
+        <div class="login-tag">✅ 已通过微信登录 · 加入于 2026-11-04</div>
+        <div class="me-stats">
+          <div class="s"><b>3</b><i>毛孩子</i></div>
+          <div class="s"><b>11</b><i>护理任务</i></div>
+          <div class="s"><b>26</b><i>累计打卡</i></div>
+        </div>
+      </div>
+      <div class="quota-card">
+        <div class="ring"><i>3/5</i></div>
+        <div class="quota-main">
+          <div class="q-t">🔔 提醒配额</div>
+          <div class="q-d">剩余 3 条订阅消息可发送<br>用完后续订即可继续提醒</div>
+        </div>
+        <button class="quota-btn">＋ 续订</button>
+      </div>
+      <div class="weight-card">
+        <div class="weight-head">
+          <span class="w-t">⚖️ 最近体重 · 元宝</span>
+          <span class="w-link">全部记录 ›</span>
+        </div>
+        <div class="w-bars">
+          <div class="w-col"><i style="height:34px"></i><small>3.9</small></div>
+          <div class="w-col"><i style="height:38px"></i><small>4.0</small></div>
+          <div class="w-col"><i style="height:36px"></i><small>4.0</small></div>
+          <div class="w-col"><i style="height:42px"></i><small>4.1</small></div>
+          <div class="w-col"><i style="height:45px"></i><small>4.2</small></div>
+        </div>
+        <div class="weight-foot">
+          <span>最新 <b>4.2kg</b>（11-09）</span>
+          <span>半年变化 <b class="up">↑ 0.3kg</b></span>
+        </div>
+      </div>
+      <div class="menu-card">
+        <div class="menu-item"><span class="m-ico">📨</span>提醒发送记录<span class="arr">›</span></div>
+        <div class="menu-item"><span class="m-ico">🛡️</span>隐私保护指引<span class="arr">›</span></div>
+        <div class="menu-item"><span class="m-ico">🐾</span>关于崽崽打卡站<span class="arr">›</span></div>
+      </div>
+      <div class="tabbar" style="position:static;">
+        <div class="tab"><span class="t-icon">🏠</span>任务</div>
+        <div class="tab"><span class="t-icon">🐾</span>宠物</div>
+        <div class="tab"><span class="t-icon">📖</span>记录</div>
+        <div class="tab active"><span class="t-icon">🙂</span>我的</div>
+      </div>
+    </div></div>
+    <div class="caption">
+      <h3>我的页 · 个人中心（完整版）</h3>
+      <p>在上一版基础上：<b>① 登录标签并入加入日期</b>，省一行；<b>② 新增体重趋势迷你柱状图</b>（直接取最新一只宠物的数据，点「全部记录」进体重页），让这个数据在个人页有存在感；<b>③ 体重入口从菜单上移成独立卡</b>，菜单只留次级功能。</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="summary">
+  <h2>📋 这两张图的优化点</h2>
+  <div class="summary-grid">
+    <div class="sum-item"><div class="no">1</div><p><b>记录页顶部统计条</b><small>累计 / 本月 / 连续打卡天数，数据都可以从现有记录表聚合出来</small></p></div>
+    <div class="sum-item"><div class="no">2</div><p><b>按天分组的时间轴</b><small>竖线 + 圆点 + 日期标题，同一日期的打卡聚在一起，比平铺列表更有"日记感"</small></p></div>
+    <div class="sum-item"><div class="no">3</div><p><b>体重记录汇入时间轴</b><small>称重也是一次"打卡事件"，统一叙事；带涨跌箭头</small></p></div>
+    <div class="sum-item"><div class="no">4</div><p><b>双筛选收进白卡 + 行内标签</b><small>宠物 / 类型两行 chips，选中态渐变胶囊</small></p></div>
+    <div class="sum-item"><div class="no">5</div><p><b>我的页体重迷你趋势卡</b><small>5 根小柱 + 最新值 + 半年变化，点击进体重页</small></p></div>
+    <div class="sum-item"><div class="no">6</div><p><b>配额圆环 + 三列统计</b><small>沿用上一版方案，登录标签合并加入日期</small></p></div>
+  </div>
+  <p class="foot">实现说明：时间轴 = 左侧竖线用 ::before 伪元素 + 日期圆点绝对定位，都是纯 CSS；统计条数据由后端 /api/user/profile 扩展返回或前端本地聚合，不新增表。确认后与第一批优化点一起逐页落地。</p>
+</div>
+
+</body>
+</html>

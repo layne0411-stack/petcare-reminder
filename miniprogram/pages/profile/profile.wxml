@@ -64,19 +64,29 @@
     </view>
   </view>
 
-  <!-- 体重迷你趋势（第一只宠物的最近 5 次） -->
-  <view class="card weight-card" wx:if="{{weightTrend}}" bindtap="goWeightPage">
+  <!-- 体重迷你趋势（宠物胶囊可切换） -->
+  <view class="card weight-card" wx:if="{{trendPets.length}}" bindtap="goWeightPage">
     <view class="weight-head">
       <text class="weight-title">{{weightTrend.petAvatar}} {{weightTrend.petName}}的体重趋势</text>
-      <text class="weight-latest">{{weightTrend.latest}} kg<text class="weight-diff {{weightTrend.diff >= 0 ? 'diff-up' : 'diff-down'}}">{{weightTrend.diff >= 0 ? '▲' : '▼'}} {{weightTrend.diff >= 0 ? weightTrend.diff : -weightTrend.diff}}</text></text>
+      <text wx:if="{{weightTrend && !weightTrend.empty}}" class="weight-latest">{{weightTrend.latest}} kg<text class="weight-diff {{weightTrend.diff >= 0 ? 'diff-up' : 'diff-down'}}">{{weightTrend.diff >= 0 ? '▲' : '▼'}} {{weightTrend.diff >= 0 ? weightTrend.diff : -weightTrend.diff}}</text></text>
     </view>
-    <view class="weight-bars">
+    <view class="trend-chips" wx:if="{{trendPets.length > 1}}">
+      <view
+        wx:for="{{trendPets}}"
+        wx:key="id"
+        class="trend-chip {{item.active ? 'chip-active' : ''}}"
+        data-id="{{item.id}}"
+        catchtap="onTrendPetTap"
+      >{{item.avatar}} {{item.name}}</view>
+    </view>
+    <view class="weight-bars" wx:if="{{weightTrend && !weightTrend.empty}}">
       <view class="wb-item" wx:for="{{weightTrend.bars}}" wx:key="date">
         <view class="wb-bar" style="height: {{item.h}}rpx;"></view>
         <text class="wb-val">{{item.value}}</text>
         <text class="wb-date">{{item.date}}</text>
       </view>
     </view>
+    <view class="trend-empty" wx:if="{{weightTrend && weightTrend.empty}}">这只崽崽的体重记录还不足 2 次，称一称就有了～</view>
     <view class="weight-more">全部记录 ›</view>
   </view>
 

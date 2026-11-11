@@ -33,7 +33,6 @@ Page({
     activeType: '',   // '' = 全部类型
     total: 0,
     monthCount: 0,    // 本月记录数
-    streak: 0,        // 连续打卡天数
     weightEvents: []  // 体重事件（按宠物筛选时保留，选了具体类型则不展示）
   },
 
@@ -95,7 +94,7 @@ Page({
       }
       this.weightEvents = weightEvents;
 
-      // 顶部统计：累计 / 本月 / 连续天数
+      // 顶部统计：累计 / 本月
       const today = this.todayStr();
       const monthPrefix = today.slice(0, 7);
       const monthCount = rawRecords.filter(r => (r.doneDate || '').slice(0, 7) === monthPrefix).length;
@@ -106,8 +105,7 @@ Page({
         typeChips: types.slice(0, 8),
         activeType,
         total: rawRecords.length,
-        monthCount,
-        streak: this.calcStreak(rawRecords, today)
+        monthCount
       });
       this.applyFilter();
     } catch (err) {
@@ -115,20 +113,6 @@ Page({
       wx.showToast({ title: '加载失败', icon: 'none' });
       this.setData({ loading: false });
     }
-  },
-
-  /** 连续打卡天数：从今天（或昨天）往前数，每天都至少有一次打卡 */
-  calcStreak(records, today) {
-    const days = new Set(records.map(r => r.doneDate));
-    if (!days.size) return 0;
-    const d = new Date(today + 'T00:00:00');
-    if (!days.has(today)) d.setDate(d.getDate() - 1); // 今天还没打，从昨天起算
-    let streak = 0;
-    while (days.has(this.fmtDate(d))) {
-      streak++;
-      d.setDate(d.getDate() - 1);
-    }
-    return streak;
   },
 
   fmtDate(d) {

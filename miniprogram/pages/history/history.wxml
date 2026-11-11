@@ -13,11 +13,6 @@
       <text class="sb-num">{{monthCount}}</text>
       <text class="sb-label">本月记录</text>
     </view>
-    <view class="sb-divider"></view>
-    <view class="sb-item">
-      <text class="sb-num">🔥 {{streak}}</text>
-      <text class="sb-label">连续天数</text>
-    </view>
   </view>
 
   <!-- 双筛选白卡 -->

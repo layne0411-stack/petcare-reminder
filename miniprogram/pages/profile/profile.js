@@ -21,7 +21,9 @@ Page({
     petCount: 0,
     quotaLeft: 0,
     ringStyle: '',      // 配额圆环（conic-gradient）
-    weightTrend: null   // 第一只宠物的体重迷你趋势
+    weightTrend: null,  // 当前展示的体重迷你趋势
+    trendPets: [],      // 可切换的宠物胶囊（id/name/avatar）
+    activeTrendPetId: 0 // 当前趋势展示的宠物
   },
 
   onShow() {
@@ -74,23 +76,36 @@ Page({
     return `conic-gradient(from -90deg, #FFB088 0deg, var(--peach) ${deg}deg, #FFEFE3 ${deg}deg)`;
   },
 
-  /** 体重迷你趋势：取第一只宠物的最近 5 次记录，画小柱状图 */
+  /** 体重迷你趋势：拉宠物列表（供切换胶囊），默认展示第一只 */
   async loadWeightTrend() {
     try {
       const petsRes = await request('/api/pets');
       const pets = petsRes.list || [];
       if (!pets.length) {
-        this.setData({ weightTrend: null });
+        this.setData({ trendPets: [], activeTrendPetId: 0, weightTrend: null });
         return;
       }
-      const first = pets[0];
-      this._firstPetId = first.id;
-      this._firstPetName = first.name;
-      this._firstPetAvatar = first.avatar;
-      const res = await request(`/api/pets/${first.id}/weights`);
+      this._trendPets = pets;
+      this.setData({
+        trendPets: pets.slice(0, 6).map((p, i) => ({ id: p.id, name: p.name, avatar: p.avatar, active: i === 0 })),
+        activeTrendPetId: pets[0].id
+      });
+      await this.loadTrendFor(pets[0].id);
+    } catch (err) {
+      console.warn('体重趋势加载失败:', err);
+      this.setData({ trendPets: [], activeTrendPetId: 0, weightTrend: null });
+    }
+  },
+
+  /** 加载指定宠物的体重趋势（少于 2 次记录时展示占位文案而不是隐藏卡片） */
+  async loadTrendFor(petId) {
+    const pet = (this._trendPets || []).find(p => String(p.id) === String(petId));
+    if (!pet) return;
+    try {
+      const res = await request(`/api/pets/${petId}/weights`);
       const list = (res.list || []).slice(-5);
       if (list.length < 2) {
-        this.setData({ weightTrend: null });
+        this.setData({ weightTrend: { petName: pet.name, petAvatar: pet.avatar, empty: true } });
         return;
       }
       const vals = list.map(w => w.weight);
@@ -106,17 +121,30 @@ Page({
       const diff = Math.round((latest - list[list.length - 2].weight) * 100) / 100;
       this.setData({
         weightTrend: {
-          petName: first.name,
-          petAvatar: first.avatar,
+          petName: pet.name,
+          petAvatar: pet.avatar,
           latest,
           diff,
-          bars
+          bars,
+          empty: false
         }
       });
     } catch (err) {
-      console.warn('体重趋势加载失败:', err);
-      this.setData({ weightTrend: null });
+      console.warn('体重数据拉取失败:', err);
+      this.setData({ weightTrend: { petName: pet.name, petAvatar: pet.avatar, empty: true } });
     }
+  },
+
+  /** 点宠物胶囊：切换趋势展示的宠物 */
+  onTrendPetTap(e) {
+    const id = e.currentTarget.dataset.id;
+    if (id === undefined || id === null || id === '') return;
+    if (String(id) === String(this.data.activeTrendPetId)) return;
+    this.setData({
+      activeTrendPetId: id,
+      trendPets: this.data.trendPets.map(p => Object.assign({}, p, { active: String(p.id) === String(id) }))
+    });
+    this.loadTrendFor(id);
   },
 
   /** 头像图片加载失败时的兜底：回退成 emoji，避免显示空白 */
@@ -245,12 +273,14 @@ Page({
     });
   },
 
-  /** 点体重趋势卡：直接进第一只宠物的体重页 */
+  /** 点体重趋势卡：进当前选中宠物的体重页 */
   goWeightPage() {
-    if (this._firstPetId) {
-      const name = encodeURIComponent(this._firstPetName || '崽崽');
-      const avatar = encodeURIComponent(this._firstPetAvatar || '🐾');
-      wx.navigateTo({ url: `/pages/pet-weight/pet-weight?id=${this._firstPetId}&name=${name}&avatar=${avatar}` });
+    const pet = (this._trendPets || []).find(p => p.id === this.data.activeTrendPetId)
+      || (this._trendPets || [])[0];
+    if (pet) {
+      const name = encodeURIComponent(pet.name || '崽崽');
+      const avatar = encodeURIComponent(pet.avatar || '🐾');
+      wx.navigateTo({ url: `/pages/pet-weight/pet-weight?id=${pet.id}&name=${name}&avatar=${avatar}` });
     } else {
       wx.switchTab({ url: '/pages/pets/pets' });
     }

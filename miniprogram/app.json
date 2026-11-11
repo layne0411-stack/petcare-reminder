@@ -24,19 +24,27 @@
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "任务"
+        "text": "任务",
+        "iconPath": "images/tab/task.png",
+        "selectedIconPath": "images/tab/task-selected.png"
       },
       {
         "pagePath": "pages/pets/pets",
-        "text": "宠物"
+        "text": "宠物",
+        "iconPath": "images/tab/pets.png",
+        "selectedIconPath": "images/tab/pets-selected.png"
       },
       {
         "pagePath": "pages/history/history",
-        "text": "记录"
+        "text": "记录",
+        "iconPath": "images/tab/history.png",
+        "selectedIconPath": "images/tab/history-selected.png"
       },
       {
         "pagePath": "pages/profile/profile",
-        "text": "我的"
+        "text": "我的",
+        "iconPath": "images/tab/profile.png",
+        "selectedIconPath": "images/tab/profile-selected.png"
       }
     ]
   },
