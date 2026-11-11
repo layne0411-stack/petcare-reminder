@@ -374,6 +374,9 @@ def _pet_out(row: dict) -> dict:
     species = (row.get("species") or "other").strip()
     meta = SPECIES_META.get(species, SPECIES_META["other"])
     nd = row.get("next_due")
+    # 头像可能是 emoji，也可能是上传后的 /uploads/xxx.jpg 路径
+    raw_avatar = (row.get("avatar") or "").strip()
+    is_photo = raw_avatar.startswith("/uploads/")
     next_due = as_date(nd) if nd else None
     gender = int(row.get("gender") or 0)
     return {
@@ -381,7 +384,9 @@ def _pet_out(row: dict) -> dict:
         "name": row["name"],
         "species": species if species in SPECIES_META else "other",
         "speciesLabel": meta["label"],
-        "avatar": (row.get("avatar") or "").strip() or meta["emoji"],
+        "avatar": raw_avatar or meta["emoji"],
+        "avatarImg": raw_avatar if is_photo else "",
+        "avatarEmoji": meta["emoji"] if is_photo else (raw_avatar or meta["emoji"]),
         "breed": row.get("breed") or "",
         "birthday": str(row["birthday"])[:10] if row.get("birthday") else "",
         "gender": gender,
@@ -399,13 +404,19 @@ def _task_out(row: dict) -> dict:
     last_done = as_date(row["last_done"]) if row["last_done"] else None
     # 宠物头像/种类来自 LEFT JOIN；宠物改名后以 pets.name 为准，删除后回落到快照
     live_name = row.get("pet_live_name")
+    raw_avatar = (row.get("pet_avatar") or "").strip()
+    species = row.get("pet_species") or ""
+    fallback_emoji = SPECIES_META.get(species, SPECIES_META["other"])["emoji"]
+    is_photo = raw_avatar.startswith("/uploads/")
     return {
         "id": row["id"],
         "typeName": row["type_name"],
         "petId": row.get("pet_id"),
         "petName": live_name or row["pet_name"],
-        "petAvatar": row.get("pet_avatar") or "",
-        "petSpecies": row.get("pet_species") or "",
+        "petAvatar": raw_avatar,
+        "petAvatarImg": raw_avatar if is_photo else "",
+        "petAvatarEmoji": fallback_emoji if is_photo else (raw_avatar or fallback_emoji),
+        "petSpecies": species,
         "intervalDays": row["interval_days"],
         "lastDone": last_done.isoformat() if last_done else "",
         "nextDue": next_due.isoformat(),
@@ -559,9 +570,9 @@ def upload_avatar(body: AvatarIn, uid: int = Depends(current_user)):
     with open(os.path.join(UPLOAD_DIR, filename), "wb") as f:
         f.write(raw)
 
-    # 清理该用户的旧头像文件，避免无限堆积
+    # 清理该用户的旧头像文件，避免无限堆积（宠物照片前缀 u{uid}_pet_ ，不能一起删）
     for old in os.listdir(UPLOAD_DIR):
-        if old.startswith(f"u{uid}_") and old != filename:
+        if old.startswith(f"u{uid}_") and "_pet_" not in old and old != filename:
             try:
                 os.remove(os.path.join(UPLOAD_DIR, old))
             except OSError:
@@ -571,6 +582,47 @@ def upload_avatar(body: AvatarIn, uid: int = Depends(current_user)):
     execute("UPDATE users SET avatar = %s WHERE id = %s", (path, uid))
     return {
         "avatar": path,
+        "avatarDataUrl": f"data:{mime};base64,{base64.b64encode(raw).decode()}",
+    }
+
+
+@app.post("/api/pet-avatar")
+def upload_pet_avatar(body: AvatarIn, uid: int = Depends(current_user)):
+    """上传宠物照片作为头像：base64 data URL → 落盘 uploads/ → 返回可访问路径
+
+    新建宠物时还没有 pet_id，所以这里只负责存文件，路径随 /api/pets 的 avatar 字段提交。
+    """
+    data = body.dataUrl or ""
+    if "," not in data:
+        raise HTTPException(400, "图片格式不正确")
+    head, b64 = data.split(",", 1)
+    try:
+        raw = base64.b64decode(b64)
+    except Exception:
+        raise HTTPException(400, "图片数据无法解析")
+    if len(raw) > AVATAR_MAX_BYTES:
+        raise HTTPException(400, "图片过大，请控制在 2MB 以内")
+    if not raw:
+        raise HTTPException(400, "图片为空")
+
+    ext, mime = sniff_image(raw[:16])
+    if not mime:
+        raise HTTPException(400, "图片格式不支持，请重新选择")
+
+    filename = f"u{uid}_pet_{int(time.time() * 1000)}.{ext}"
+    with open(os.path.join(UPLOAD_DIR, filename), "wb") as f:
+        f.write(raw)
+
+    # 只清理该用户更早的宠物照片，用户自己的头像不动
+    for old in os.listdir(UPLOAD_DIR):
+        if old.startswith(f"u{uid}_pet_") and old != filename:
+            try:
+                os.remove(os.path.join(UPLOAD_DIR, old))
+            except OSError:
+                pass
+
+    return {
+        "avatar": f"/uploads/{filename}",
         "avatarDataUrl": f"data:{mime};base64,{base64.b64encode(raw).decode()}",
     }
 
@@ -916,7 +968,12 @@ def _pet_values(body: PetIn):
     species = (body.species or "other").strip()
     if species not in SPECIES_META:
         species = "other"
-    avatar = (body.avatar or "").strip()[:8] or SPECIES_META[species]["emoji"]
+    avatar_raw = (body.avatar or "").strip()
+    if avatar_raw.startswith("/uploads/"):
+        # 上传的宠物照片（由 /api/pet-avatar 返回），只接受本站 uploads 路径
+        avatar = avatar_raw[:255]
+    else:
+        avatar = avatar_raw[:8] or SPECIES_META[species]["emoji"]
     birthday = (body.birthday or "").strip() or None
     if birthday:
         try:

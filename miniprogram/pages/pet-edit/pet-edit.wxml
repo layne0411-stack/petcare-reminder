@@ -25,12 +25,19 @@
   <!-- 头像 -->
   <view class="card">
     <view class="label">选个头像</view>
-    <view class="avatar-preview">{{avatar}}</view>
+    <view class="avatar-preview">
+      <image wx:if="{{avatarImg}}" class="avatar-preview-img" src="{{avatarImg}}" mode="aspectFill" />
+      <text wx:else>{{avatarEmoji}}</text>
+    </view>
+    <view class="avatar-actions">
+      <view class="avatar-upload" bindtap="onPickPhoto">📷 {{avatarImg ? '换一张照片' : '上传照片'}}</view>
+      <view wx:if="{{avatarImg}}" class="avatar-clear" bindtap="onClearPhoto">用 emoji</view>
+    </view>
     <view class="avatar-list">
       <view
         wx:for="{{avatars}}"
         wx:key="*this"
-        class="avatar-item {{avatar === item ? 'avatar-active' : ''}}"
+        class="avatar-item {{!avatarImg && avatar === item ? 'avatar-active' : ''}}"
         bindtap="onPickAvatar"
         data-avatar="{{item}}"
       >{{item}}</view>

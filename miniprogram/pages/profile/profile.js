@@ -87,7 +87,12 @@ Page({
       }
       this._trendPets = pets;
       this.setData({
-        trendPets: pets.slice(0, 6).map((p, i) => ({ id: p.id, name: p.name, avatar: p.avatar, active: i === 0 })),
+        trendPets: pets.slice(0, 6).map((p, i) => ({
+          id: p.id,
+          name: p.name,
+          avatar: p.avatarImg ? p.avatarEmoji : p.avatar,
+          active: i === 0
+        })),
         activeTrendPetId: pets[0].id
       });
       await this.loadTrendFor(pets[0].id);
@@ -101,11 +106,12 @@ Page({
   async loadTrendFor(petId) {
     const pet = (this._trendPets || []).find(p => String(p.id) === String(petId));
     if (!pet) return;
+    const petEmoji = pet.avatarImg ? pet.avatarEmoji : pet.avatar;
     try {
       const res = await request(`/api/pets/${petId}/weights`);
       const list = (res.list || []).slice(-5);
       if (list.length < 2) {
-        this.setData({ weightTrend: { petName: pet.name, petAvatar: pet.avatar, empty: true } });
+        this.setData({ weightTrend: { petName: pet.name, petAvatar: petEmoji, empty: true } });
         return;
       }
       const vals = list.map(w => w.weight);
@@ -122,7 +128,7 @@ Page({
       this.setData({
         weightTrend: {
           petName: pet.name,
-          petAvatar: pet.avatar,
+          petAvatar: petEmoji,
           latest,
           diff,
           bars,
@@ -131,7 +137,7 @@ Page({
       });
     } catch (err) {
       console.warn('体重数据拉取失败:', err);
-      this.setData({ weightTrend: { petName: pet.name, petAvatar: pet.avatar, empty: true } });
+      this.setData({ weightTrend: { petName: pet.name, petAvatar: petEmoji, empty: true } });
     }
   },
 

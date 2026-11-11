@@ -1,5 +1,5 @@
 // pages/pet-weight/pet-weight.js — 体重记录（纯记录，不给健康建议）
-const { request } = require('../../utils/api.js');
+const { request, getBaseUrl } = require('../../utils/api.js');
 const { openModal, modalHandlers, DEFAULT_MODAL } = require('../../utils/ui.js');
 
 Page({
@@ -10,6 +10,7 @@ Page({
     petId: 0,
     petName: '',
     petAvatar: '🐾',
+    petAvatarImg: '',   // 宠物有照片头像时优先展示照片
     loading: true,
     weights: [],        // 升序
     latest: null,
@@ -25,10 +26,13 @@ Page({
   onLoad(options) {
     const id = Number(options.id) || 0;
     const today = this.todayStr();
+    const rawAvatar = decodeURIComponent(options.avatar || '🐾');
+    const isPhoto = rawAvatar.startsWith('/uploads/');
     this.setData({
       petId: id,
       petName: decodeURIComponent(options.name || '崽崽'),
-      petAvatar: decodeURIComponent(options.avatar || '🐾'),
+      petAvatar: isPhoto ? '🐾' : rawAvatar,
+      petAvatarImg: isPhoto ? getBaseUrl() + rawAvatar : '',
       inputDate: today,
       today
     });

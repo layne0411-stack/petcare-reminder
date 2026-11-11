@@ -1,6 +1,6 @@
 // pages/pet-edit/pet-edit.js — 新增/编辑宠物档案
 const { todayStr } = require('../../utils/util.js');
-const { request } = require('../../utils/api.js');
+const { request, getBaseUrl } = require('../../utils/api.js');
 const { openModal, modalHandlers, DEFAULT_MODAL } = require('../../utils/ui.js');
 
 const SPECIES = [
@@ -53,6 +53,8 @@ Page({
     breedTip: SPECIES[0].breedTip,
     name: '',
     avatar: '🐶',
+    avatarImg: '',      // 上传后的照片地址（空则显示 emoji）
+    avatarEmoji: '🐶',  // 没有照片时展示的 emoji
     breed: '',
     birthday: '',
     today: '',
@@ -75,6 +77,8 @@ Page({
             speciesKey: sp.key,
             breedTip: sp.breedTip,
             avatar: p.avatar || '🐾',
+            avatarImg: p.avatarImg ? getBaseUrl() + p.avatarImg : '',
+            avatarEmoji: p.avatarEmoji || sp.emoji,
             breed: p.breed || '',
             birthday: p.birthday || '',
             gender: p.gender || 0,
@@ -99,17 +103,83 @@ Page({
   onPickSpecies(e) {
     const key = e.currentTarget.dataset.key;
     const sp = SPECIES.find(s => s.key === key);
-    // 头像还是默认种类图时，跟着种类一起换，避免选了猫还显示狗的图标
-    const follow = SPECIES_EMOJIS.indexOf(this.data.avatar) >= 0;
+    // 没上传照片、且头像是跟着种类走的默认 emoji 时，随种类一起换
+    const follow = !this.data.avatarImg && SPECIES_EMOJIS.indexOf(this.data.avatar) >= 0;
     this.setData({
       speciesKey: key,
       breedTip: sp.breedTip,
-      avatar: follow ? sp.emoji : this.data.avatar
+      avatar: follow ? sp.emoji : this.data.avatar,
+      avatarEmoji: follow ? sp.emoji : this.data.avatarEmoji
     });
   },
 
   onPickAvatar(e) {
-    this.setData({ avatar: e.currentTarget.dataset.avatar });
+    // 选 emoji 视为放弃照片
+    const emoji = e.currentTarget.dataset.avatar;
+    this.setData({ avatar: emoji, avatarEmoji: emoji, avatarImg: '' });
+  },
+
+  /** 上传宠物照片当头像（存到自己的后端，仅本人可见） */
+  onPickPhoto() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['album', 'camera'],
+      sizeType: ['compressed'],
+      success: res => {
+        const f = res.tempFiles && res.tempFiles[0];
+        if (f && f.tempFilePath) this.uploadPhoto(f.tempFilePath);
+      },
+      fail: err => {
+        const msg = (err && err.errMsg) || '';
+        if (msg.indexOf('cancel') !== -1) return;
+        console.error('选择宠物照片失败:', err);
+        if (msg.indexOf('privacy') !== -1 || msg.indexOf('declared') !== -1) {
+          wx.showToast({ title: '小程序后台需先声明「照片或视频」权限', icon: 'none', duration: 3000 });
+        } else {
+          wx.showToast({ title: '选择图片失败: ' + msg, icon: 'none', duration: 3000 });
+        }
+      }
+    });
+  },
+
+  uploadPhoto(tempPath) {
+    wx.showLoading({ title: '上传中', mask: true });
+    wx.getFileSystemManager().readFile({
+      filePath: tempPath,
+      encoding: 'base64',
+      success: res => {
+        const m = /\.(jpe?g|png|webp|gif)(?:$|\?)/i.exec(tempPath);
+        const ext = m ? m[1].toLowerCase().replace('jpeg', 'jpg') : 'png';
+        const mime = ext === 'jpg' ? 'jpeg' : ext;
+        const dataUrl = `data:image/${mime};base64,${res.data}`;
+        request('/api/pet-avatar', { method: 'POST', data: { dataUrl } })
+          .then(r => {
+            wx.hideLoading();
+            const path = (r && r.avatar) || '';
+            const imgSrc = (r && r.avatarDataUrl) || (path ? getBaseUrl() + path : '');
+            this.setData({ avatar: path || this.data.avatar, avatarImg: imgSrc });
+            wx.showToast({ title: '照片已选好', icon: 'success' });
+          })
+          .catch(err => {
+            wx.hideLoading();
+            console.error('上传宠物照片失败:', err);
+            const msg = (err && err.detail) || (err && err.message) || '上传失败，请重试';
+            wx.showToast({ title: String(msg).slice(0, 20), icon: 'none' });
+          });
+      },
+      fail: err => {
+        wx.hideLoading();
+        console.error('读取图片失败:', err);
+        wx.showToast({ title: '读取图片失败', icon: 'none' });
+      }
+    });
+  },
+
+  /** 去掉照片，回到 emoji */
+  onClearPhoto() {
+    const sp = SPECIES.find(s => s.key === this.data.speciesKey) || SPECIES[SPECIES.length - 1];
+    this.setData({ avatar: sp.emoji, avatarEmoji: sp.emoji, avatarImg: '' });
   },
 
   onPickGender(e) {
@@ -193,7 +263,7 @@ Page({
   async onDelete() {
     const d = this.data;
     const r = await openModal(this, {
-      emoji: d.avatar || '🐾',
+      emoji: d.avatarEmoji || '🐾',
       title: `删除「${d.name}」的档案`,
       desc: '档案删除后无法恢复，已经打过的卡会留在护理记录里。',
       confirmText: '删除',

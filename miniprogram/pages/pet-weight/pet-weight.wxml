@@ -2,7 +2,10 @@
 <view class="page">
   <!-- 概要 -->
   <view class="hero">
-    <view class="hero-avatar">{{petAvatar}}</view>
+    <view class="hero-avatar">
+      <image wx:if="{{petAvatarImg}}" class="hero-avatar-img" src="{{petAvatarImg}}" mode="aspectFill" />
+      <text wx:else>{{petAvatar}}</text>
+    </view>
     <view class="hero-info">
       <view class="hero-name">{{petName}}</view>
       <view class="hero-weight" wx:if="{{latest}}">

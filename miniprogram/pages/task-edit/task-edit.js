@@ -88,7 +88,7 @@ Page({
   async loadPets(optionsPetId) {
     try {
       const res = await request('/api/pets');
-      const pets = (res.list || []).map(p => ({ id: p.id, name: p.name, avatar: p.avatar }));
+      const pets = (res.list || []).map(p => ({ id: p.id, name: p.name, avatar: p.avatarImg ? p.avatarEmoji : p.avatar }));
       const patch = { pets };
       if (optionsPetId && pets.some(p => p.id === optionsPetId)) patch.petId = optionsPetId;
       this.setData(patch);

@@ -65,7 +65,7 @@ Page({
       });
       this.rawRecords = rawRecords;
 
-      const pets = (petsRes.list || []).map(p => ({ id: p.id, name: p.name, avatar: p.avatar }));
+      const pets = (petsRes.list || []).map(p => ({ id: p.id, name: p.name, avatar: p.avatarImg ? p.avatarEmoji : p.avatar }));
 
       // 类型筛选：只展示实际出现过的类型，最多 8 个
       const types = [];

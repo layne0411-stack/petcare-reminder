@@ -78,7 +78,7 @@ Page({
       const pets = (petsRes.list || []).map(p => ({
         id: p.id,
         name: p.name,
-        avatar: p.avatar
+        avatar: p.avatarImg ? p.avatarEmoji : p.avatar
       }));
       // 选中的宠物被删掉时自动回到「全部」
       let activePetId = this.data.activePetId;

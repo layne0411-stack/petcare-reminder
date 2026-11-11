@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS pets (
   user_id INT UNSIGNED NOT NULL,
   name VARCHAR(30) NOT NULL COMMENT '宠物名，如 豆豆',
   species VARCHAR(10) NOT NULL DEFAULT 'other' COMMENT 'dog/cat/rabbit/hamster/bird/fish/reptile/other',
-  avatar VARCHAR(16) NOT NULL DEFAULT '' COMMENT 'emoji 头像',
+  avatar VARCHAR(255) NOT NULL DEFAULT '' COMMENT 'emoji 头像或 /uploads/xxx.jpg 照片',
   breed VARCHAR(30) NOT NULL DEFAULT '' COMMENT '品种',
   birthday DATE NULL COMMENT '生日',
   gender TINYINT NOT NULL DEFAULT 0 COMMENT '0未知 1公 2母',

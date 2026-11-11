@@ -1,13 +1,15 @@
 // pages/pets/pets.js — 宠物档案列表（多宠物管理）
-const { request } = require('../../utils/api.js');
+const { request, getBaseUrl } = require('../../utils/api.js');
 
 Page({
   data: {
     loading: true,
-    pets: []
+    pets: [],
+    baseUrl: ''   // 宠物照片是相对路径，渲染时需要拼上服务端地址
   },
 
   onShow() {
+    this.setData({ baseUrl: getBaseUrl() });
     this.loadPets();
   },
 
