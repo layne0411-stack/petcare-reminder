@@ -817,14 +817,29 @@ def complete_task(task_id: int, body: Optional[CompleteIn] = None, uid: int = De
     return {"nextDue": next_due_str, "doneDate": done.isoformat(), "alreadyDone": False}
 
 
+@app.get("/api/quota")
+def get_quota(uid: int = Depends(current_user)):
+    """续订前校验：有没有开启提醒的任务，避免用户白白消耗一次授权"""
+    q = query(
+        "SELECT COALESCE(SUM(quota), 0) AS q FROM tasks WHERE user_id = %s AND remind_enabled = 1",
+        (uid,), one=True,
+    )
+    return {"quotaLeft": int(q["q"] or 0), "hasRemindTask": bool(q["q"])}
+
+
 @app.post("/api/quota")
 def add_quota(body: QuotaIn, uid: int = Depends(current_user)):
-    """前端 wx.requestSubscribeMessage 用户同意后调用，+1 条发送配额"""
+    """前端 wx.requestSubscribeMessage 用户同意后调用，+1 条发送配额
+
+    返回 added：是否真的加上了（没有开启提醒的任务时加不上，前端据此提示）
+    """
+    added = 0
     if body.taskId:
         execute(
             "UPDATE tasks SET quota = quota + 1 WHERE id = %s AND user_id = %s AND remind_enabled = 1",
             (body.taskId, uid),
         )
+        added = 1
     else:
         # 没有指定任务时（如「我的」页续订）：给最近要到期的那个任务 +1，
         # 一次性订阅只能发一条，不要给所有任务都记一次（会造成虚假配额）
@@ -836,7 +851,12 @@ def add_quota(body: QuotaIn, uid: int = Depends(current_user)):
         )
         if row:
             execute("UPDATE tasks SET quota = quota + 1 WHERE id = %s", (row["id"],))
-    return {"ok": True}
+            added = 1
+    q = query(
+        "SELECT COALESCE(SUM(quota), 0) AS q FROM tasks WHERE user_id = %s AND remind_enabled = 1",
+        (uid,), one=True,
+    )
+    return {"ok": True, "added": added, "quotaLeft": int(q["q"] or 0)}
 
 
 @app.get("/api/notify/logs")

@@ -294,6 +294,16 @@ Page({
 
   /** 续订一次订阅（+1 条发送配额） */
   async onRenewQuota() {
+    // 前置校验：配额记在开启提醒的任务上，没有任务时授权也是浪费
+    try {
+      const check = await request('/api/quota');
+      if (!check.hasRemindTask) {
+        wx.showToast({ title: '先创建任务并开启提醒，再来续订哦', icon: 'none' });
+        return;
+      }
+    } catch (err) {
+      console.warn('配额校验失败，继续走原流程:', err);
+    }
     const accepted = await new Promise(resolve => {
       wx.requestSubscribeMessage({
         tmplIds: [getApp().TEMPLATE_ID],
@@ -306,9 +316,18 @@ Page({
       return;
     }
     try {
-      await request('/api/quota', { method: 'POST', data: {} });
-      wx.showToast({ title: '已续订 1 条', icon: 'success' });
-      this.loadProfile();
+      const res = await request('/api/quota', { method: 'POST', data: {} });
+      if (res.added) {
+        wx.showToast({ title: '已续订 1 条', icon: 'success' });
+      } else {
+        // 没有开启提醒的任务，配额加不上（一次性订阅是记在任务上的）
+        wx.showToast({ title: '先创建任务并开启提醒，再来续订哦', icon: 'none' });
+      }
+      if (typeof res.quotaLeft === 'number') {
+        this.setData({ quotaLeft: res.quotaLeft, ringStyle: this.quotaRing(res.quotaLeft) });
+      } else {
+        this.loadProfile();
+      }
     } catch (err) {
       console.error('续订失败:', err);
       wx.showToast({ title: '续订失败', icon: 'none' });
