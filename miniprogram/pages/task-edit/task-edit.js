@@ -110,6 +110,19 @@ Page({
     // 从宠物页返回时可能新建了宠物：首次 onShow 由 onLoad 负责，之后每次回来刷新
     if (this._shown) this.loadPets(this.data.petId);
     this._shown = true;
+    // 预取订阅配额：保存时配额充足就不再弹授权弹窗，避免每次保存都打扰
+    this.refreshQuota();
+  },
+
+  /** 预取剩余订阅配额（GET /api/quota），保存时据此决定是否弹授权 */
+  async refreshQuota() {
+    try {
+      const q = await request('/api/quota');
+      this._quotaLeft = q.quotaLeft || 0;
+    } catch (err) {
+      console.warn('配额预取失败，保存时将按需弹授权:', err);
+      this._quotaLeft = 0; // 查不到就按不足处理，宁可多弹一次
+    }
   },
 
   onPickPreset(e) {
@@ -194,9 +207,11 @@ Page({
     }
 
     // 开启提醒：借保存这次点击请求订阅授权（微信要求必须在点击上下文同步调用），
-    // 把「是否同意」随任务一起提交，由服务端在建任务的同时写入配额，避免配额丢失
+    // 把「是否同意」随任务一起提交，由服务端在建任务的同时写入配额，避免配额丢失。
+    // 配额充足（剩余 >= 2）时跳过弹窗不打扰用户；不足时才请求授权
+    const quotaEnough = d.remindEnabled && (this._quotaLeft || 0) >= 2;
     let subscribeAccepted = false;
-    if (d.remindEnabled) {
+    if (d.remindEnabled && !quotaEnough) {
       subscribeAccepted = await this.requestSubscribe();
     }
 
@@ -219,10 +234,10 @@ Page({
       } else {
         await request('/api/tasks', { method: 'POST', data: payload });
       }
-      const tip = d.remindEnabled && !subscribeAccepted
-        ? '已保存（未授权提醒）'
-        : '已保存';
-      wx.showToast({ title: tip, icon: subscribeAccepted ? 'success' : 'none' });
+      // 只有「配额不足且用户拒绝了授权」才提示未授权；配额充足跳过弹窗属于正常情况
+      const declined = d.remindEnabled && !quotaEnough && !subscribeAccepted;
+      const tip = declined ? '已保存（未授权提醒）' : '已保存';
+      wx.showToast({ title: tip, icon: declined ? 'none' : 'success' });
       setTimeout(() => wx.navigateBack(), 600);
     } catch (err) {
       console.error('保存失败:', err);
