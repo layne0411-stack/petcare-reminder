@@ -25,8 +25,6 @@ CREATE TABLE IF NOT EXISTS users (
 -- ALTER TABLE users ADD COLUMN nickname VARCHAR(50) NOT NULL DEFAULT '' AFTER openid;
 -- ALTER TABLE users ADD COLUMN avatar VARCHAR(255) NOT NULL DEFAULT '' AFTER nickname;
 -- ALTER TABLE users ADD COLUMN quota INT NOT NULL DEFAULT 0 COMMENT '订阅消息可发送配额（用户级池子）' AFTER avatar;
--- 配额迁移：任务级 → 用户级（后端启动时也会自动执行）
--- UPDATE users u SET quota = (SELECT COALESCE(SUM(t.quota),0) FROM tasks t WHERE t.user_id = u.id AND t.remind_enabled = 1);
 
 -- 宠物档案表（多宠物管理）
 CREATE TABLE IF NOT EXISTS pets (
@@ -56,7 +54,6 @@ CREATE TABLE IF NOT EXISTS tasks (
   remind_enabled TINYINT(1) NOT NULL DEFAULT 1 COMMENT '是否开启提醒',
   remind_hour TINYINT NOT NULL DEFAULT 9 COMMENT '提醒时间（整点 0-23）',
   advance_days TINYINT NOT NULL DEFAULT 0 COMMENT '提前提醒天数，0=到期当天',
-  quota INT NOT NULL DEFAULT 0 COMMENT '已废弃：配额已迁移到 users.quota（用户级池子）',
   note VARCHAR(100) NOT NULL DEFAULT '',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_due (remind_enabled, next_due),

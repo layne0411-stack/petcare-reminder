@@ -48,10 +48,9 @@ TOKEN_TTL_DAYS = 30
 # 本地开发模式：没配 AppSecret 时，任何 code 都登录为 dev 用户（方便本地跑通，服务器上必须配置真实 Secret）
 DEV_LOGIN = not WX_SECRET
 
-# 订阅消息字段名（已按用户申领的「待办事项提醒」模板核对，2026-11-03）
-# 模板字段：事项主题=thing1，记录名称=thing5，剩余时间=short_thing20
-# 注意：short_thing 对长度有限制（5 个以内汉字，需以官方文档核实），剩余时间文案控制在 5 字内
-TEMPLATE_FIELDS = ("thing1", "thing5", "short_thing20")
+# 订阅消息字段名（已按用户申领的「打卡提醒」模板核对，2026-11-12，模板号 20647）
+# 模板字段：计划名称=thing1（≤20字） / 提醒日期=time6（格式 yyyy年M月d日） / 备注=thing3（≤20字）
+TEMPLATE_FIELDS = ("thing1", "time6", "thing3")
 
 # 运行环境：prod=生产 / uat=测试。决定上传文件的落盘子目录，数据隔离靠 MYSQL_DB 区分
 APP_ENV = os.environ.get("APP_ENV", "prod")
@@ -177,13 +176,13 @@ def get_access_token() -> str:
     return r["access_token"]
 
 
-def send_subscribe(openid: str, title: str, record_name: str, remain_text: str) -> dict:
-    """发送一次性订阅消息。字段映射：
-    thing1=事项主题(任务名) / thing5=记录名称(宠物或设备名) / short_thing20=剩余时间(≤5字)"""
+def send_subscribe(openid: str, plan_name: str, remind_date: date, remark: str) -> dict:
+    """发送一次性订阅消息（「打卡提醒」模板）。字段映射：
+    thing1=计划名称(任务名) / time6=提醒日期(yyyy年M月d日) / thing3=备注(≤20字)"""
     data = {
-        TEMPLATE_FIELDS[0]: {"value": title[:20]},
-        TEMPLATE_FIELDS[1]: {"value": (record_name or "护理任务")[:20]},
-        TEMPLATE_FIELDS[2]: {"value": remain_text[:5]},
+        TEMPLATE_FIELDS[0]: {"value": plan_name[:20]},
+        TEMPLATE_FIELDS[1]: {"value": f"{remind_date.year}年{remind_date.month}月{remind_date.day}日"},
+        TEMPLATE_FIELDS[2]: {"value": remark[:20]},
     }
     r = requests.post(
         "https://api.weixin.qq.com/cgi-bin/message/subscribe/send",
@@ -205,7 +204,7 @@ def beijing_today() -> date:
 
 
 def remain_text_for(next_due: date, today: date) -> str:
-    """剩余时间文案（short_thing 字段，5 字以内）"""
+    """剩余时间文案（旧「待办事项提醒」模板专用，已废弃保留备查）"""
     days = (next_due - today).days
     if days == 0:
         return "今天到期"
@@ -278,20 +277,26 @@ def notify_due_tasks(force: bool = False):
             skipped += 1
             continue
 
-        # 事项主题只说事情本身，宠物名留给「记录名称」字段，避免名字重复出现
-        title = f"{row['type_name']}到期提醒"
+        log_title = f"{row['pet_name']}的{row['type_name']}" if row["pet_name"] else row["type_name"]
         days = (due - today).days
-        remain = remain_text_for(due, today) if days <= 0 else f"还有{days}天"
-        r = send_subscribe(row["openid"], title, row["pet_name"] or "护理任务", remain)
+        # 备注文案：宠物名 + 任务名 + 紧迫感，控制在 20 字内
+        base = f"{row['pet_name']}的{row['type_name']}" if row["pet_name"] else row["type_name"]
+        if days == 0:
+            remark = f"{base}今天到期，记得打卡"
+        elif days > 0:
+            remark = f"{base}还有{days}天到期，记得打卡"
+        else:
+            remark = f"{base}已逾期{-days}天，请尽快处理"
+        r = send_subscribe(row["openid"], row["type_name"], due, remark)
         code = int(r.get("errcode") or 0)
         if code == 0:
             execute("UPDATE users SET quota = quota - 1 WHERE id = %s AND quota > 0", (row["user_id"],))
-            _log_notify(row["user_id"], row["id"], title, True, 0)
+            _log_notify(row["user_id"], row["id"], log_title, True, 0)
             sent += 1
         else:
             # 永久性失败（43101=用户未订阅/配额用尽；40003=openid 无效；
             # 47003=模板字段不匹配；41030=模板被删）：不扣用户配额，当天不再重试
-            _log_notify(row["user_id"], row["id"], title, False, code, r.get("errmsg", ""))
+            _log_notify(row["user_id"], row["id"], log_title, False, code, r.get("errmsg", ""))
             errors.append({"taskId": row["id"], "errcode": code, "errmsg": r.get("errmsg", "")})
     print(f"[notify] {now:%Y-%m-%d %H:%M} 检查 {len(rows)} 条，发送 {sent} 条，跳过 {skipped}，异常 {errors}")
     return {"checked": len(rows), "sent": sent, "skipped": skipped, "errors": errors}

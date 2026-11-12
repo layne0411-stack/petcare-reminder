@@ -52,7 +52,6 @@ CREATE TABLE IF NOT EXISTS tasks (
   remind_enabled INTEGER NOT NULL DEFAULT 1,
   remind_hour INTEGER NOT NULL DEFAULT 9,
   advance_days INTEGER NOT NULL DEFAULT 0,
-  quota INTEGER NOT NULL DEFAULT 0,
   note TEXT NOT NULL DEFAULT '',
   created_at TEXT DEFAULT (datetime('now','localtime'))
 );
@@ -221,11 +220,15 @@ def _migrate_user_quota_sqlite(conn):
     cols = {r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()}
     if "quota" not in cols:
         conn.execute("ALTER TABLE users ADD COLUMN quota INTEGER NOT NULL DEFAULT 0")
-        conn.execute(
-            """UPDATE users SET quota = (
-                 SELECT COALESCE(SUM(t.quota), 0) FROM tasks t
-                 WHERE t.user_id = users.id AND t.remind_enabled = 1)"""
-        )
+        try:
+            conn.execute(
+                """UPDATE users SET quota = (
+                     SELECT COALESCE(SUM(t.quota), 0) FROM tasks t
+                     WHERE t.user_id = users.id AND t.remind_enabled = 1)"""
+            )
+        except sqlite3.OperationalError as e:
+            # tasks.quota 列已删除的老库：无需回填
+            print(f"[db] tasks.quota 回填跳过（{e}）")
         print("[db] 已迁移订阅配额：tasks.quota 合计 → users.quota")
 
 
@@ -244,11 +247,15 @@ def _migrate_user_quota_mysql():
                     "ALTER TABLE users ADD COLUMN quota INT NOT NULL DEFAULT 0 "
                     "COMMENT '订阅消息可发送配额（用户级池子）'"
                 )
-                cur.execute(
-                    """UPDATE users u SET quota = (
-                         SELECT COALESCE(SUM(t.quota), 0) FROM tasks t
-                         WHERE t.user_id = u.id AND t.remind_enabled = 1)"""
-                )
+                try:
+                    cur.execute(
+                        """UPDATE users u SET quota = (
+                             SELECT COALESCE(SUM(t.quota), 0) FROM tasks t
+                             WHERE t.user_id = u.id AND t.remind_enabled = 1)"""
+                    )
+                except Exception as e:
+                    # tasks.quota 列已删除的老库：无需回填，不阻塞启动
+                    print(f"[db] tasks.quota 回填跳过（{e}）")
                 print("[db] 已迁移订阅配额：tasks.quota 合计 → users.quota")
     finally:
         _release(conn)
