@@ -278,7 +278,8 @@ def notify_due_tasks(force: bool = False):
             skipped += 1
             continue
 
-        title = f"{row['pet_name']}的{row['type_name']}" if row["pet_name"] else row["type_name"]
+        # 事项主题只说事情本身，宠物名留给「记录名称」字段，避免名字重复出现
+        title = f"{row['type_name']}到期提醒"
         days = (due - today).days
         remain = remain_text_for(due, today) if days <= 0 else f"还有{days}天"
         r = send_subscribe(row["openid"], title, row["pet_name"] or "护理任务", remain)
