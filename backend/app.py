@@ -53,10 +53,25 @@ DEV_LOGIN = not WX_SECRET
 # 注意：short_thing 对长度有限制（5 个以内汉字，需以官方文档核实），剩余时间文案控制在 5 字内
 TEMPLATE_FIELDS = ("thing1", "thing5", "short_thing20")
 
+# 运行环境：prod=生产 / uat=测试。决定上传文件的落盘子目录，数据隔离靠 MYSQL_DB 区分
+APP_ENV = os.environ.get("APP_ENV", "prod")
+
 # 头像上传目录（用户头像仅本人可见，不作公开展示）
+# 新文件按环境落盘 uploads/prod/ 或 uploads/uat/；历史文件在根目录，读取时兜底兼容
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+UPLOAD_ENV_DIR = os.path.join(UPLOAD_DIR, APP_ENV)
+os.makedirs(UPLOAD_ENV_DIR, exist_ok=True)
 AVATAR_MAX_BYTES = 2 * 1024 * 1024  # 2MB 上限
+
+
+def resolve_upload(filename: str):
+    """按「当前环境目录 → 旧根目录」顺序解析上传文件，返回绝对路径或 None"""
+    safe = os.path.basename(filename or "")
+    for d in (UPLOAD_ENV_DIR, UPLOAD_DIR):
+        full = os.path.join(d, safe)
+        if os.path.isfile(full):
+            return full
+    return None
 
 # 图片真实格式识别表（按文件头判断，不信任 data URL 里声明的类型）
 _IMG_MAGIC = (
@@ -89,8 +104,8 @@ def avatar_data_url(path: str) -> str:
     """
     if not path or not path.startswith("/uploads/"):
         return ""
-    full = os.path.join(UPLOAD_DIR, os.path.basename(path))
-    if not os.path.isfile(full):
+    full = resolve_upload(os.path.basename(path))
+    if not full:
         return ""
     try:
         with open(full, "rb") as f:
@@ -289,7 +304,7 @@ app = FastAPI(lifespan=lifespan)
 @app.get("/api/ping")
 def ping():
     """连通性探测：小程序启动时用它自动选出手机可达的后端地址"""
-    return {"ok": True, "server": "petcare", "time": datetime.now().isoformat(timespec="seconds")}
+    return {"ok": True, "server": "petcare", "env": APP_ENV, "time": datetime.now().isoformat(timespec="seconds")}
 
 
 # ---------- 请求模型 ----------
@@ -567,14 +582,14 @@ def upload_avatar(body: AvatarIn, uid: int = Depends(current_user)):
         raise HTTPException(400, "图片格式不支持，请重新选择")
 
     filename = f"u{uid}_{int(time.time())}.{ext}"
-    with open(os.path.join(UPLOAD_DIR, filename), "wb") as f:
+    with open(os.path.join(UPLOAD_ENV_DIR, filename), "wb") as f:
         f.write(raw)
 
-    # 清理该用户的旧头像文件，避免无限堆积（宠物照片前缀 u{uid}_pet_ ，不能一起删）
-    for old in os.listdir(UPLOAD_DIR):
+    # 清理该用户在本环境目录下的旧头像文件，避免无限堆积（宠物照片前缀 u{uid}_pet_ ，不能一起删）
+    for old in os.listdir(UPLOAD_ENV_DIR):
         if old.startswith(f"u{uid}_") and "_pet_" not in old and old != filename:
             try:
-                os.remove(os.path.join(UPLOAD_DIR, old))
+                os.remove(os.path.join(UPLOAD_ENV_DIR, old))
             except OSError:
                 pass
 
@@ -610,14 +625,14 @@ def upload_pet_avatar(body: AvatarIn, uid: int = Depends(current_user)):
         raise HTTPException(400, "图片格式不支持，请重新选择")
 
     filename = f"u{uid}_pet_{int(time.time() * 1000)}.{ext}"
-    with open(os.path.join(UPLOAD_DIR, filename), "wb") as f:
+    with open(os.path.join(UPLOAD_ENV_DIR, filename), "wb") as f:
         f.write(raw)
 
-    # 只清理该用户更早的宠物照片，用户自己的头像不动
-    for old in os.listdir(UPLOAD_DIR):
+    # 只清理该用户在本环境目录下更早的宠物照片，用户自己的头像不动
+    for old in os.listdir(UPLOAD_ENV_DIR):
         if old.startswith(f"u{uid}_pet_") and old != filename:
             try:
-                os.remove(os.path.join(UPLOAD_DIR, old))
+                os.remove(os.path.join(UPLOAD_ENV_DIR, old))
             except OSError:
                 pass
 
@@ -629,10 +644,12 @@ def upload_pet_avatar(body: AvatarIn, uid: int = Depends(current_user)):
 
 @app.get("/uploads/{filename}")
 def serve_upload(filename: str):
-    """提供头像文件访问（文件名带用户 ID 与时间戳，不可枚举）"""
-    safe = os.path.basename(filename)
-    full = os.path.join(UPLOAD_DIR, safe)
-    if not os.path.isfile(full):
+    """提供头像文件访问（文件名带用户 ID 与时间戳，不可枚举）
+
+    先找当前环境子目录（uploads/{env}/），再兜底旧根目录（历史文件）。
+    """
+    full = resolve_upload(filename)
+    if not full:
         raise HTTPException(404, "文件不存在")
     try:
         with open(full, "rb") as f:

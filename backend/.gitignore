@@ -1,5 +1,6 @@
 # 敏感文件不入库
 .env
+.env.*
 petcare.db
 .venv/
 __pycache__/

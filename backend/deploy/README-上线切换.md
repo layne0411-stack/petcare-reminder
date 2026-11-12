@@ -60,18 +60,28 @@ scp petcare-reminder/backend/uploads/* root@152.136.58.30:/opt/petcare/backend/u
 curl -I https://zaizaidaka.site/api/ping     # 期望 HTTP/2 200
 ```
 
-## 第四步：切换前端（1 行改动）
+## 第三步半之二：环境区分 prod / uat（2026-11-12 起）
 
-`miniprogram/utils/api.js`：
+| 环境 | 后端位置 | APP_ENV | 数据库 | 上传目录 | 小程序版本路由 |
+|---|---|---|---|---|---|
+| **uat 测试** | 本机 8000（或以后 uat.zaizaidaka.site） | `uat` | `petcare_uat` | `uploads/uat/` | develop（开发工具/真机调试） |
+| **prod 生产** | 服务器 8001 → https://zaizaidaka.site | `prod` | `petcare` | `uploads/prod/`（旧文件在根目录，读取兜底） | release（正式版）；体验版 trial 先打 uat 域名、不通回落 prod |
 
-```js
-const SERVER = 'https://zaizaidaka.site';   // 原 http://152.136.58.30:8001
-```
+要点：
+- 后端按 `APP_ENV` 环境变量决定上传落盘子目录；`/api/ping` 返回 `env` 字段可确认连的是哪个环境
+- 数据隔离靠 `MYSQL_DB`：本地 `.env.uat`（petcare_uat） vs 服务器 `.env.prod`（petcare）；两套文件已在 backend/ 目录，密码相同不要提交 git
+- uat 库建库脚本：`deploy/create-uat-db.sql`（root 执行一次）
+- 前端 `utils/api.js` 按 `wx.getAccountInfoSync().miniProgram.envVersion` 自动路由，无需手动切换
+- uat 子域名 `uat.zaizaidaka.site` 随主域名备案生效，无需单独备案；部署时在 nginx 加一个 server 块反代 uat 后端端口即可
 
-mp 后台 → 开发与服务 → 开发设置 → **服务器域名** → request 合法域名添加：
+## 第四步：切换前端（已自动化，仅需配合法域名）
+
+前端 `miniprogram/utils/api.js` 已按小程序版本自动路由（develop→本机 uat、trial→uat 域名、release→prod 域名），
+无需改代码。备案通过后只需在 mp 后台 → 开发与服务 → 开发设置 → **服务器域名** → request 合法域名添加：
 
 ```
 https://zaizaidaka.site
+https://uat.zaizaidaka.site
 ```
 
 之后微信开发者工具重新编译，手机预览**不再需要开调试模式**。

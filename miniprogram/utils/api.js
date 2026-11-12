@@ -1,20 +1,44 @@
-// utils/api.js — 服务器请求封装 + 静默登录 + 后端地址自动探测
+// utils/api.js — 服务器请求封装 + 静默登录 + 后端地址自动探测 + 环境路由
 
-// 📌 当前阶段：本机后端（开发调试，手机需与电脑同一局域网）
-//    顺序即优先级，启动时并发探测，取第一个可达的
-// 📌 备案通过后：把 SERVER 常量换成 'https://zaizaidaka.site'，
-//    并在 mp.weixin.qq.com → 开发管理 → 开发设置 → 服务器域名 → request 合法域名 中配置该域名
-const SERVER = 'http://152.136.58.30:8001';  // 云服务器（备案后改为 https 域名）
+// 📌 环境区分（与后端 APP_ENV / MYSQL_DB 对应）
+//    develop（开发工具/真机调试）→ 本机后端 = uat
+//    trial（体验版）            → uat 域名，不通时回落 prod
+//    release（正式版）          → prod 域名
+//    备案通过后在 mp 后台 request 合法域名里同时配置两个域名即可
+const SERVER_PROD = 'https://zaizaidaka.site';        // 生产：petcare 库 + uploads/prod/
+const SERVER_UAT = 'https://uat.zaizaidaka.site';     // 测试：petcare_uat 库 + uploads/uat/（子域名随主域名备案，无需单独备案）
 
-const HOSTS = [
+// 开发环境候选（顺序即优先级，并发探测取第一个可达的）
+const HOSTS_DEV = [
   'http://172.29.161.80:8000',   // ① 本机后端 · 局域网 WLAN（手机同 WiFi 时走这条）
   'http://192.168.255.14:8000',  // ① 备用 · 旧以太网 IP（换了网段时可能命中）
   'http://127.0.0.1:8000',       // ② 本机后端 · 开发者工具
-  SERVER                          // ③ 云服务器（备案通过后启用）
+  SERVER_UAT                     // ③ UAT 云服务器（部署后启用）
 ];
 
 let BASE_URL = '';
 let detecting = null;
+let CURRENT_ENV = '';
+
+/** 读取小程序运行版本：develop / trial / release */
+function currentEnv() {
+  if (CURRENT_ENV) return CURRENT_ENV;
+  try {
+    const acc = wx.getAccountInfoSync();
+    CURRENT_ENV = (acc && acc.miniProgram && acc.miniProgram.envVersion) || 'develop';
+  } catch (e) {
+    CURRENT_ENV = 'develop';
+  }
+  return CURRENT_ENV;
+}
+
+/** 按环境返回候选后端地址列表 */
+function hostList() {
+  const env = currentEnv();
+  if (env === 'release') return [SERVER_PROD];
+  if (env === 'trial') return [SERVER_UAT, SERVER_PROD];
+  return HOSTS_DEV;
+}
 
 /** 探测单个地址是否可达 */
 function probe(host) {
@@ -29,15 +53,16 @@ function probe(host) {
   });
 }
 
-/** 选出可达的后端地址（并发探测，按 HOSTS 顺序优先） */
+/** 选出可达的后端地址（并发探测，按候选顺序优先） */
 function detect() {
   if (BASE_URL) return Promise.resolve(BASE_URL);
   if (!detecting) {
-    detecting = Promise.all(HOSTS.map(probe)).then(list => {
+    const hosts = hostList();
+    detecting = Promise.all(hosts.map(probe)).then(list => {
       const hit = list.find(h => h);
-      BASE_URL = hit || HOSTS[0];
+      BASE_URL = hit || hosts[0];
       detecting = null;
-      console.log('[api] 后端地址:', BASE_URL, hit ? '✓ 探测成功' : '✗ 全部未通（已回退默认）');
+      console.log('[api] 环境:', currentEnv(), '| 后端地址:', BASE_URL, hit ? '✓ 探测成功' : '✗ 全部未通（已回退默认）');
       return BASE_URL;
     });
   }
@@ -98,4 +123,4 @@ function request(path, { method = 'GET', data, _retried = false } = {}) {
   }));
 }
 
-module.exports = { detect, login, request, getBaseUrl: () => BASE_URL, getHosts: () => HOSTS };
+module.exports = { detect, login, request, currentEnv, getBaseUrl: () => BASE_URL, getHosts: () => hostList() };
