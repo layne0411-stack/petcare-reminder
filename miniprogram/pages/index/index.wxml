@@ -43,8 +43,10 @@
   <!-- 空状态 -->
   <view wx:if="{{empty && !loading}}" class="empty">
     <view class="paw-wm">🐾</view>
-    <text class="empty-pet">🐕‍🦺</text>
-    <text class="empty-pet-cat">🐈</text>
+    <view class="empty-pets">
+      <text class="empty-pet">🐕‍🦺</text>
+      <text class="empty-pet-cat">🐈</text>
+    </view>
     <block wx:if="{{activePetId}}">
       <text class="empty-title">这只崽崽还没有任务～</text>
       <text class="empty-text">点下方按钮给它安排第一条护理计划</text>

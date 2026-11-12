@@ -115,8 +115,28 @@
   align-items: center;
   padding: 130rpx 60rpx;
 }
-.empty-pet { font-size: 110rpx; transform: rotate(-6deg); }
-.empty-pet-cat { font-size: 84rpx; margin: -30rpx 0 0 120rpx; transform: rotate(8deg); }
+/* 吉祥物：狗为主体，猫贴在右下角，错落但底部对齐 */
+.empty-pets {
+  position: relative;
+  width: 220rpx;
+  height: 150rpx;
+}
+.empty-pet {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 110rpx;
+  line-height: 1;
+  transform: rotate(-6deg);
+}
+.empty-pet-cat {
+  position: absolute;
+  right: -20rpx;
+  bottom: 0;
+  font-size: 80rpx;
+  line-height: 1;
+  transform: rotate(8deg);
+}
 .empty-title {
   margin-top: 30rpx;
   font-size: 34rpx;
