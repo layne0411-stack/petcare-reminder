@@ -27,5 +27,6 @@ App({
   globalData: {},
 
   // 订阅消息模板 ID（前端 wx.requestSubscribeMessage 用；后端发送用 .env 里的同名配置）
-  TEMPLATE_ID: 'kKY38alyuIzGDPbmkzH37rV0CjnCpuFsm1DZzCwkpbo'
+  // 「打卡提醒」模板（2026-11-12 切换，字段 thing1=计划名称 / time6=提醒日期 / thing3=备注）
+  TEMPLATE_ID: '_uToPaLWxfxat1GGIlvmqtwFGMcpgdSneWNrF8bjyw4'
 });
