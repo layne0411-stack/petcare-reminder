@@ -13,7 +13,7 @@ if __name__ == "__main__":
     print(f"=== 当前北京时间：{today} ===")
 
     rows = query(
-        """SELECT t.id, t.type_name, t.pet_name, t.next_due, t.quota, t.remind_enabled,
+        """SELECT t.id, t.type_name, t.pet_name, t.next_due, u.quota, t.remind_enabled,
                   t.remind_hour, t.advance_days, u.openid
            FROM tasks t JOIN users u ON t.user_id = u.id
            ORDER BY t.id"""
@@ -24,13 +24,13 @@ if __name__ == "__main__":
         if not r["remind_enabled"]:
             state.append("提醒已关闭")
         if r["quota"] <= 0:
-            state.append("配额为0→不会发送")
+            state.append("用户配额为0→不会发送")
         if str(r["next_due"]) > str(today):
             state.append(f"未到期({r['next_due']})")
         print(
             f"  #{r['id']} {r['pet_name']}{r['type_name']}"
             f" | 到期 {r['next_due']} | 提醒 {r['remind_hour']}点"
-            f" | 提前 {r['advance_days']} 天 | 配额 {r['quota']}"
+            f" | 提前 {r['advance_days']} 天 | 用户配额 {r['quota']}"
             f" | {'; '.join(state) if state else '✓ 可发送'}"
         )
 

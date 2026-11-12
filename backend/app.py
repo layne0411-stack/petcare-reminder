@@ -233,17 +233,17 @@ def notify_due_tasks(force: bool = False):
 
     - 触发日 = next_due - advance_days（提前提醒）；等于今天才发
     - remind_hour 已过且今天还没成功发过 → 发送（失败会在当天后续整点重试）
-    - 每条任务只有一次性订阅的配额，发一条即扣 1
+    - 订阅配额记在用户上（users.quota，微信一次性订阅授权就是用户级池子），发一条扣 1
     - force=True：忽略提醒时间限制，用于手动联调
     """
     now = _now_beijing()
     today = now.date()
     hour = now.hour
     rows = query(
-        """SELECT t.id, t.user_id, t.pet_name, t.type_name, t.quota, t.next_due,
+        """SELECT t.id, t.user_id, t.pet_name, t.type_name, u.quota, t.next_due,
                   t.remind_hour, t.advance_days, u.openid
            FROM tasks t JOIN users u ON t.user_id = u.id
-           WHERE t.remind_enabled = 1 AND t.quota > 0
+           WHERE t.remind_enabled = 1 AND u.quota > 0
            ORDER BY t.next_due ASC LIMIT 500"""
     )
     sent, skipped, errors = 0, 0, []
@@ -266,6 +266,17 @@ def notify_due_tasks(force: bool = False):
         if already:
             skipped += 1
             continue
+        # 今天这条任务已经因永久性错误失败过 → 当天不再重试（避免反复刷失败日志）
+        perm_failed = query(
+            """SELECT id FROM notify_logs WHERE task_id = %s AND ok = 0
+               AND errcode IN (43101, 40003, 47003, 41030)
+               AND DATE(sent_at) = %s LIMIT 1""",
+            (row["id"], today.isoformat()),
+            one=True,
+        )
+        if perm_failed:
+            skipped += 1
+            continue
 
         title = f"{row['pet_name']}的{row['type_name']}" if row["pet_name"] else row["type_name"]
         days = (due - today).days
@@ -273,14 +284,12 @@ def notify_due_tasks(force: bool = False):
         r = send_subscribe(row["openid"], title, row["pet_name"] or "护理任务", remain)
         code = int(r.get("errcode") or 0)
         if code == 0:
-            execute("UPDATE tasks SET quota = quota - 1 WHERE id = %s", (row["id"],))
+            execute("UPDATE users SET quota = quota - 1 WHERE id = %s AND quota > 0", (row["user_id"],))
             _log_notify(row["user_id"], row["id"], title, True, 0)
             sent += 1
         else:
-            # 永久性失败：清了配额，避免每小时重复失败
-            # 43101=用户未订阅/配额用尽；40003=openid 无效；47003=模板字段不匹配；41030=模板被删
-            if code in (43101, 40003, 47003, 41030):
-                execute("UPDATE tasks SET quota = 0 WHERE id = %s", (row["id"],))
+            # 永久性失败（43101=用户未订阅/配额用尽；40003=openid 无效；
+            # 47003=模板字段不匹配；41030=模板被删）：不扣用户配额，当天不再重试
             _log_notify(row["user_id"], row["id"], title, False, code, r.get("errmsg", ""))
             errors.append({"taskId": row["id"], "errcode": code, "errmsg": r.get("errmsg", "")})
     print(f"[notify] {now:%Y-%m-%d %H:%M} 检查 {len(rows)} 条，发送 {sent} 条，跳过 {skipped}，异常 {errors}")
@@ -515,12 +524,8 @@ def _profile_payload(uid: int) -> dict:
     t = query("SELECT COUNT(*) AS c FROM tasks WHERE user_id = %s", (uid,), one=True)
     r = query("SELECT COUNT(*) AS c FROM records WHERE user_id = %s", (uid,), one=True)
     p = query("SELECT COUNT(*) AS c FROM pets WHERE user_id = %s", (uid,), one=True)
-    # 可发送提醒条数：一次性订阅的剩余配额总和，给用户一个「还能收到几条」的判断依据
-    q = query(
-        "SELECT COALESCE(SUM(quota), 0) AS q FROM tasks WHERE user_id = %s AND remind_enabled = 1",
-        (uid,),
-        one=True,
-    )
+    # 可发送提醒条数：用户级订阅配额（users.quota），给用户一个「还能收到几条」的判断依据
+    q = query("SELECT quota FROM users WHERE id = %s", (uid,), one=True)
     return {
         "userId": u["id"],
         "nickname": u["nickname"],
@@ -530,7 +535,7 @@ def _profile_payload(uid: int) -> dict:
         "taskCount": int(t["c"]),
         "recordCount": int(r["c"]),
         "petCount": int(p["c"]),
-        "quotaLeft": int(q["q"] or 0),
+        "quotaLeft": int(q["quota"] or 0) if q else 0,
     }
 
 
@@ -696,17 +701,19 @@ def create_task(body: TaskIn, uid: int = Depends(current_user)):
         pet_name = body.petName.strip()
     last = body.lastDone or beijing_today().isoformat()
     next_due = (datetime.strptime(last, "%Y-%m-%d") + timedelta(days=body.intervalDays)).date()
-    # 用户在这次保存时同意了订阅 → 新任务直接获得 1 次发送配额
+    # 用户在这次保存时同意了订阅 → 用户配额 +1（微信一次性订阅授权是用户级池子）
     quota = 1 if body.subscribeAccepted else 0
     new_id = execute(
         """INSERT INTO tasks
            (user_id, pet_id, type_name, pet_name, interval_days, last_done, next_due,
-            remind_enabled, remind_hour, advance_days, note, quota)
-           VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+            remind_enabled, remind_hour, advance_days, note)
+           VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
         (uid, pet_id, body.typeName.strip(), pet_name, body.intervalDays,
          last, next_due.isoformat(), int(body.remindEnabled), body.remindHour,
-         body.advanceDays, body.note.strip(), quota),
+         body.advanceDays, body.note.strip()),
     )
+    if quota:
+        execute("UPDATE users SET quota = quota + 1 WHERE id = %s", (uid,))
     return {"id": new_id, "quota": quota}
 
 
@@ -725,12 +732,14 @@ def update_task(task_id: int, body: TaskIn, uid: int = Depends(current_user)):
     execute(
         """UPDATE tasks SET pet_id=%s, type_name=%s, pet_name=%s, interval_days=%s,
            last_done=%s, next_due=%s, remind_enabled=%s, remind_hour=%s, advance_days=%s,
-           note=%s, quota = quota + %s
+           note=%s
            WHERE id=%s AND user_id=%s""",
         (pet_id, body.typeName.strip(), pet_name, body.intervalDays,
          last, next_due.isoformat(), int(body.remindEnabled), body.remindHour,
-         body.advanceDays, body.note.strip(), quota_inc, task_id, uid),
+         body.advanceDays, body.note.strip(), task_id, uid),
     )
+    if quota_inc:
+        execute("UPDATE users SET quota = quota + 1 WHERE id = %s", (uid,))
     return {"ok": True, "quotaAdded": quota_inc}
 
 
@@ -820,43 +829,33 @@ def complete_task(task_id: int, body: Optional[CompleteIn] = None, uid: int = De
 @app.get("/api/quota")
 def get_quota(uid: int = Depends(current_user)):
     """续订前校验：有没有开启提醒的任务，避免用户白白消耗一次授权"""
-    q = query(
-        "SELECT COALESCE(SUM(quota), 0) AS q FROM tasks WHERE user_id = %s AND remind_enabled = 1",
+    q = query("SELECT quota FROM users WHERE id = %s", (uid,), one=True)
+    t = query(
+        "SELECT COUNT(*) AS c FROM tasks WHERE user_id = %s AND remind_enabled = 1",
         (uid,), one=True,
     )
-    return {"quotaLeft": int(q["q"] or 0), "hasRemindTask": bool(q["q"])}
+    quota_left = int(q["quota"] or 0) if q else 0
+    return {"quotaLeft": quota_left, "hasRemindTask": bool(t["c"])}
 
 
 @app.post("/api/quota")
 def add_quota(body: QuotaIn, uid: int = Depends(current_user)):
-    """前端 wx.requestSubscribeMessage 用户同意后调用，+1 条发送配额
+    """前端 wx.requestSubscribeMessage 用户同意后调用，用户配额 +1 条
 
+    配额挂在用户上（微信一次性订阅授权就是用户级池子，与具体任务无关）。
     返回 added：是否真的加上了（没有开启提醒的任务时加不上，前端据此提示）
     """
     added = 0
-    if body.taskId:
-        execute(
-            "UPDATE tasks SET quota = quota + 1 WHERE id = %s AND user_id = %s AND remind_enabled = 1",
-            (body.taskId, uid),
-        )
-        added = 1
-    else:
-        # 没有指定任务时（如「我的」页续订）：给最近要到期的那个任务 +1，
-        # 一次性订阅只能发一条，不要给所有任务都记一次（会造成虚假配额）
-        row = query(
-            """SELECT id FROM tasks WHERE user_id = %s AND remind_enabled = 1
-               ORDER BY next_due ASC LIMIT 1""",
-            (uid,),
-            one=True,
-        )
-        if row:
-            execute("UPDATE tasks SET quota = quota + 1 WHERE id = %s", (row["id"],))
-            added = 1
-    q = query(
-        "SELECT COALESCE(SUM(quota), 0) AS q FROM tasks WHERE user_id = %s AND remind_enabled = 1",
+    t = query(
+        "SELECT COUNT(*) AS c FROM tasks WHERE user_id = %s AND remind_enabled = 1",
         (uid,), one=True,
     )
-    return {"ok": True, "added": added, "quotaLeft": int(q["q"] or 0)}
+    if t["c"]:
+        execute("UPDATE users SET quota = quota + 1 WHERE id = %s", (uid,))
+        added = 1
+    q = query("SELECT quota FROM users WHERE id = %s", (uid,), one=True)
+    return {"ok": True, "added": added,
+            "quotaLeft": int(q["quota"] or 0) if q else 0}
 
 
 @app.get("/api/notify/logs")
@@ -1112,11 +1111,14 @@ def apply_pet_template(pet_id: int, body: Optional[TemplateIn] = None, uid: int 
         execute(
             """INSERT INTO tasks
                (user_id, pet_id, type_name, pet_name, interval_days, last_done, next_due,
-                remind_enabled, remind_hour, advance_days, note, quota)
-               VALUES (%s,%s,%s,%s,%s,%s,%s,1,9,0,%s,%s)""",
-            (uid, pet_id, name, pet["name"], days, today.isoformat(), nd.isoformat(), "", quota),
+                remind_enabled, remind_hour, advance_days, note)
+               VALUES (%s,%s,%s,%s,%s,%s,%s,1,9,0,%s)""",
+            (uid, pet_id, name, pet["name"], days, today.isoformat(), nd.isoformat(), ""),
         )
         created.append({"typeName": name, "intervalDays": days, "nextDue": nd.isoformat()})
+    # 一次授权只值一条消息：不管这次生成了几个任务，用户配额只 +1
+    if quota and created:
+        execute("UPDATE users SET quota = quota + 1 WHERE id = %s", (uid,))
     return {"created": created, "skipped": len(tpl) - len(created)}
 
 

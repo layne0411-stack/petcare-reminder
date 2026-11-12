@@ -175,7 +175,7 @@ Page({
 
     // 1. 请求订阅消息授权（必须在用户点击链路里调用），同意后通知服务端加配额
     if (task.remindEnabled) {
-      await this.requestSubscribe(task.id);
+      await this.requestSubscribe();
     }
 
     // 2. 服务端写记录并按最新记录重算下次到期日
@@ -205,13 +205,14 @@ Page({
     return `${d.getFullYear()}-${m}-${day}`;
   },
 
-  requestSubscribe(taskId) {
+  requestSubscribe() {
     return new Promise(resolve => {
       wx.requestSubscribeMessage({
         tmplIds: [getApp().TEMPLATE_ID],
         success: res => {
           if (res[getApp().TEMPLATE_ID] === 'accept') {
-            request('/api/quota', { method: 'POST', data: { taskId } }).catch(console.error);
+            // 配额挂在用户上（users.quota），无需传 taskId
+            request('/api/quota', { method: 'POST', data: {} }).catch(console.error);
           }
           resolve();
         },

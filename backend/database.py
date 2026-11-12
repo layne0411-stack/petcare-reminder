@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS users (
   openid TEXT NOT NULL UNIQUE,
   nickname TEXT NOT NULL DEFAULT '',
   avatar TEXT NOT NULL DEFAULT '',
+  quota INTEGER NOT NULL DEFAULT 0,
   created_at TEXT DEFAULT (datetime('now','localtime')),
   last_login_at TEXT DEFAULT (datetime('now','localtime'))
 );
@@ -215,8 +216,46 @@ def execute(sql: str, params=()) -> int:
             conn.close()
 
 
+def _migrate_user_quota_sqlite(conn):
+    """配额迁移：任务级 → 用户级。加列（老库）+ 一次性回填合计"""
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()}
+    if "quota" not in cols:
+        conn.execute("ALTER TABLE users ADD COLUMN quota INTEGER NOT NULL DEFAULT 0")
+        conn.execute(
+            """UPDATE users SET quota = (
+                 SELECT COALESCE(SUM(t.quota), 0) FROM tasks t
+                 WHERE t.user_id = users.id AND t.remind_enabled = 1)"""
+        )
+        print("[db] 已迁移订阅配额：tasks.quota 合计 → users.quota")
+
+
+def _migrate_user_quota_mysql():
+    """MySQL 老库自动加 users.quota 列并一次性回填（幂等，列已存在则跳过）"""
+    conn = _acquire_with_retry()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """SELECT COUNT(*) AS c FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = %s AND TABLE_NAME = 'users' AND COLUMN_NAME = 'quota'""",
+                (MYSQL_CONF["database"],),
+            )
+            if cur.fetchone()["c"] == 0:
+                cur.execute(
+                    "ALTER TABLE users ADD COLUMN quota INT NOT NULL DEFAULT 0 "
+                    "COMMENT '订阅消息可发送配额（用户级池子）'"
+                )
+                cur.execute(
+                    """UPDATE users u SET quota = (
+                         SELECT COALESCE(SUM(t.quota), 0) FROM tasks t
+                         WHERE t.user_id = u.id AND t.remind_enabled = 1)"""
+                )
+                print("[db] 已迁移订阅配额：tasks.quota 合计 → users.quota")
+    finally:
+        _release(conn)
+
+
 def init():
-    """初始化：SQLite 自动建表；MySQL 请先执行 schema.sql"""
+    """初始化：SQLite 自动建表；MySQL 请先执行 schema.sql（老库差异会自动补列）"""
     if DRIVER == "sqlite":
         conn = sqlite3.connect(SQLITE_PATH)
         try:
@@ -231,11 +270,13 @@ def init():
                 conn.execute("ALTER TABLE tasks ADD COLUMN remind_hour INTEGER NOT NULL DEFAULT 9")
             if "advance_days" not in tcols:
                 conn.execute("ALTER TABLE tasks ADD COLUMN advance_days INTEGER NOT NULL DEFAULT 0")
+            _migrate_user_quota_sqlite(conn)
             conn.commit()
         finally:
             conn.close()
         print(f"[db] SQLite 就绪：{SQLITE_PATH}")
     else:
+        _migrate_user_quota_mysql()
         print(f"[db] MySQL 模式：{MYSQL_CONF['host']}:{MYSQL_CONF['port']}/{MYSQL_CONF['database']}（请确认已导入 schema.sql）")
 
 
