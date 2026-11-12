@@ -126,30 +126,9 @@
   color: var(--ink-light);
   margin-bottom: 20rpx;
 }
-.emoji-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16rpx;
-}
-.emoji-item {
-  width: 146rpx;
-  height: 146rpx;
-  border-radius: 38rpx;
-  background: #FBF4EA;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 72rpx;
-  transition: all 0.15s;
-}
-.emoji-item:active { transform: scale(0.92); }
-.emoji-active {
-  background: var(--peach-bg);
-  box-shadow: inset 0 0 0 4rpx rgba(255, 154, 98, 0.5);
-  transform: scale(1.06);
-}
-.hint {
-  margin-top: 18rpx;
+/* 默认头像引导文案 */
+.avatar-hint {
+  margin-top: 14rpx;
   font-size: 22rpx;
   color: var(--ink-light);
 }

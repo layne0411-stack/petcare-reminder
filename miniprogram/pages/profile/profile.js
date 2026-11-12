@@ -2,8 +2,6 @@
 const { request, getBaseUrl } = require('../../utils/api.js');
 const { openModal, modalHandlers, DEFAULT_MODAL } = require('../../utils/ui.js');
 
-const EMOJIS = ['🐶', '🐱', '🐰', '🐹', '🦊', '🐼', '🐨', '🐷'];
-
 Page({
   ...modalHandlers,
 
@@ -11,10 +9,10 @@ Page({
     loading: true,
     modal: Object.assign({}, DEFAULT_MODAL),
     nickname: '',
-    avatar: '🐶',
+    avatar: '',
     isImageAvatar: false,
     avatarImg: '',
-    emojis: EMOJIS,
+    showDefault: false, // 没有任何头像时显示内置默认头像（引导同步微信头像）
     joinedAt: '',
     taskCount: 0,
     recordCount: 0,
@@ -47,15 +45,17 @@ Page({
   },
 
   applyProfile(p) {
-    const avatar = p.avatar || '🐶';
+    const avatar = (p.avatar || '').trim();
     const isImage = avatar.indexOf('/uploads/') === 0;
     // 优先用服务端返回的内联 base64：不走网络图片加载，避免域名校验/跨域导致空白
     const imgSrc = p.avatarDataUrl || (isImage ? getBaseUrl() + avatar : '');
+    // 展示优先级：照片/微信头像 > 内置默认头像 > 遗留 emoji
     this.setData({
       nickname: p.nickname || '铲屎官',
       avatar,
       isImageAvatar: !!imgSrc,
       avatarImg: imgSrc,
+      showDefault: !imgSrc && !avatar,
       joinedAt: p.joinedAt || '',
       taskCount: p.taskCount || 0,
       recordCount: p.recordCount || 0,
@@ -184,20 +184,6 @@ Page({
       wx.showToast({ title: '已更新', icon: 'success' });
     } catch (err) {
       console.error('更新昵称失败:', err);
-      wx.showToast({ title: '保存失败', icon: 'none' });
-    }
-  },
-
-  /** 选择 emoji 头像 */
-  async onPickEmoji(e) {
-    const emoji = e.currentTarget.dataset.emoji;
-    if (emoji === this.data.avatar) return;
-    try {
-      const p = await request('/api/user/profile', { method: 'PUT', data: { avatar: emoji } });
-      this.applyProfile(p);
-      wx.showToast({ title: '头像已更换', icon: 'success' });
-    } catch (err) {
-      console.error('更换头像失败:', err);
       wx.showToast({ title: '保存失败', icon: 'none' });
     }
   },
