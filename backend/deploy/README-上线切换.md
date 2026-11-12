@@ -64,13 +64,14 @@ curl -I https://zaizaidaka.site/api/ping     # 期望 HTTP/2 200
 
 | 环境 | 后端位置 | APP_ENV | 数据库 | 上传目录 | 小程序版本路由 |
 |---|---|---|---|---|---|
-| **uat 测试** | 本机 8000（或以后 uat.zaizaidaka.site） | `uat` | `petcare_uat` | `uploads/uat/` | develop（开发工具/真机调试） |
+| **uat 测试** | 本机 8000（或以后 uat.zaizaidaka.site） | `uat` | 本地 SQLite `petcare_uat.db`（云库 petcare_uat 已建好备用） | `uploads/uat/` | develop（开发工具/真机调试） |
 | **prod 生产** | 服务器 8001 → https://zaizaidaka.site | `prod` | `petcare` | `uploads/prod/`（旧文件在根目录，读取兜底） | release（正式版）；体验版 trial 先打 uat 域名、不通回落 prod |
 
 要点：
 - 后端按 `APP_ENV` 环境变量决定上传落盘子目录；`/api/ping` 返回 `env` 字段可确认连的是哪个环境
 - 数据隔离靠 `MYSQL_DB`：本地 `.env.uat`（petcare_uat） vs 服务器 `.env.prod`（petcare）；两套文件已在 backend/ 目录，密码相同不要提交 git
 - uat 库建库脚本：`deploy/create-uat-db.sql`（root 执行一次）
+- 2026-11-12 实施记录：云 MySQL 已建 petcare_uat（root 容器内执行，petapp 已授权）。⚠️ 发现勒索攻击残留库 RECOVER_YOUR_DATA（数据未受损，已删除）——3306 曾对公网开放被扫描。已删除防火墙 3306 规则，本地后端改用 SQLite uat，云 MySQL 仅服务器内部访问。容器 MYSQL_ROOT_PASSWORD 环境变量与实际 root 密码不一致（实际密码请自行保管，勿入库）
 - 前端 `utils/api.js` 按 `wx.getAccountInfoSync().miniProgram.envVersion` 自动路由，无需手动切换
 - uat 子域名 `uat.zaizaidaka.site` 随主域名备案生效，无需单独备案；部署时在 nginx 加一个 server 块反代 uat 后端端口即可
 
