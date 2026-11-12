@@ -109,8 +109,10 @@ Page({
       const style = styleFor(task.typeName);
       task.icon = style.icon;
       task.theme = style.theme;
+      const petEmoji = task.petAvatarEmoji
+        || (task.petAvatar && task.petAvatar[0] !== '/' ? task.petAvatar : '');
       task.titleText =
-        (task.petAvatarImg ? task.petAvatarEmoji + ' ' : '') +
+        (petEmoji ? petEmoji + ' ' : '') +
         (task.petName ? task.petName + '的' : '') +
         task.typeName;
       if (d < 0) groups.overdue.push(task);

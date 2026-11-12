@@ -57,8 +57,10 @@ Page({
         r.theme = s.theme;
         r.kind = 'record';
         r.date = r.doneDate;   // 统一字段名，方便与体重事件一起按日期排序分组
+        const recEmoji = r.petAvatarEmoji
+          || (r.petAvatar && r.petAvatar[0] !== '/' ? r.petAvatar : '');
         r.titleText =
-          (r.petAvatarImg ? r.petAvatarEmoji + ' ' : (r.petAvatar && r.petAvatar[0] !== '/' ? r.petAvatar + ' ' : '')) +
+          (recEmoji ? recEmoji + ' ' : '') +
           (r.petName ? r.petName + '的' : '') +
           r.typeName;
         return r;

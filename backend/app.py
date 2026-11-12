@@ -850,7 +850,7 @@ def list_notify_logs(uid: int = Depends(current_user)):
 def list_records(uid: int = Depends(current_user)):
     rows = query(
         """SELECT r.id, r.task_id, r.pet_id, r.pet_name, r.type_name, r.note, r.done_date,
-                  p.avatar AS pet_avatar, p.name AS pet_live_name
+                  p.avatar AS pet_avatar, p.species AS pet_species, p.name AS pet_live_name
            FROM records r LEFT JOIN pets p ON r.pet_id = p.id
            WHERE r.user_id = %s ORDER BY r.done_date DESC, r.id DESC LIMIT 200""",
         (uid,),
@@ -863,6 +863,10 @@ def list_records(uid: int = Depends(current_user)):
                 "petId": r.get("pet_id"),
                 "petName": r.get("pet_live_name") or r["pet_name"],
                 "petAvatar": r.get("pet_avatar") or "",
+                "petAvatarImg": (r.get("pet_avatar") or "").strip() if (r.get("pet_avatar") or "").startswith("/uploads/") else "",
+                "petAvatarEmoji": SPECIES_META.get(r.get("pet_species") or "", SPECIES_META["other"])["emoji"]
+                                  if (r.get("pet_avatar") or "").startswith("/uploads/")
+                                  else ((r.get("pet_avatar") or "").strip() or SPECIES_META.get(r.get("pet_species") or "", SPECIES_META["other"])["emoji"]),
                 "typeName": r["type_name"],
                 "note": r["note"],
                 "doneDate": as_date(r["done_date"]).isoformat(),
