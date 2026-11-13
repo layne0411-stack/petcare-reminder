@@ -306,8 +306,8 @@ def notify_due_tasks(force: bool = False):
 async def lifespan(app: FastAPI):
     db_init()
     sched = BackgroundScheduler(timezone="Asia/Shanghai")
-    # 每小时第 5 分钟扫描一次：任务可各自设置提醒整点，失败可在当天后续整点重试
-    sched.add_job(notify_due_tasks, "cron", minute=5, id="hourlyNotify", replace_existing=True)
+    # 每小时整点扫描：任务可各自设置提醒整点（如 15 点 → 15:00 准时发出），失败可在当天后续整点重试
+    sched.add_job(notify_due_tasks, "cron", minute=0, id="hourlyNotify", replace_existing=True)
     sched.start()
     yield
     sched.shutdown()
