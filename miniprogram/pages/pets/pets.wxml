@@ -23,7 +23,7 @@
     data-id="{{item.id}}"
   >
     <view class="pet-avatar">
-      <image wx:if="{{item.avatarImg}}" class="pet-avatar-img" src="{{baseUrl + item.avatarImg}}" mode="aspectFill" />
+      <image wx:if="{{item.avatarImg}}" class="pet-avatar-img" src="{{baseUrl + item.avatarImg}}" mode="aspectFill" binderror="onAvatarError" data-id="{{item.id}}" />
       <text wx:else>{{item.avatarEmoji}}</text>
     </view>
     <view class="pet-info">

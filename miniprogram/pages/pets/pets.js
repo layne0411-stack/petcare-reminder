@@ -37,12 +37,21 @@ Page({
         }
         return Object.assign({}, p, { dueText, dueClass });
       });
-      this.setData({ pets, loading: false });
+      // baseUrl 必须在数据回来后重新取：onShow 同步调用时地址探测可能还没完成，
+      // 拿到空字符串会让 <image> 的 src 变成相对路径，图片永远不加载（显示空白圆）
+      this.setData({ pets, loading: false, baseUrl: getBaseUrl() });
     } catch (err) {
       console.error('加载宠物失败:', err);
       this.setData({ loading: false });
       wx.showToast({ title: '加载失败，请检查网络', icon: 'none' });
     }
+  },
+
+  /** 照片加载失败（文件缺失/换了后端）→ 退回 emoji 头像，不留空白 */
+  onAvatarError(e) {
+    const id = e.currentTarget.dataset.id;
+    const idx = this.data.pets.findIndex(p => p.id === id);
+    if (idx >= 0) this.setData({ [`pets[${idx}].avatarImg`]: '' });
   },
 
   goAdd() {
