@@ -139,7 +139,16 @@
   font-weight: 700;
   color: var(--ink);
 }
-.empty-text { margin-top: 12rpx; color: var(--ink-light); font-size: 27rpx; }
+.empty-text { margin-top: 12rpx; color: var(--ink-light); font-size: 27rpx; text-align: center; }
+/* 新用户空态引导按钮（仅无宠物时出现：审核员首次进入的视角） */
+.empty-btn {
+  margin-top: 40rpx;
+  padding: 0 56rpx;
+  height: 84rpx;
+  line-height: 84rpx;
+  font-size: 30rpx;
+  border-radius: 42rpx;
+}
 
 /* ---------- 分组标题（标题 + 计数徽章 + 渐隐分隔线） ---------- */
 .section-row {

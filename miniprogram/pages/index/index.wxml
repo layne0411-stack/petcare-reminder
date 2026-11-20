@@ -47,13 +47,18 @@
       <text class="empty-pet">🐕‍🦺</text>
       <text class="empty-pet-cat">🐈</text>
     </view>
-    <block wx:if="{{activePetId}}">
+    <block wx:if="{{!pets.length}}">
+      <text class="empty-title">欢迎来到崽崽打卡站</text>
+      <text class="empty-text">添加一只崽崽，给它安排第一条护理计划吧</text>
+      <button class="btn-primary empty-btn" bindtap="goPets">＋ 添加宠物档案</button>
+    </block>
+    <block wx:elif="{{activePetId}}">
       <text class="empty-title">这只崽崽还没有任务～</text>
       <text class="empty-text">点下方按钮给它安排第一条护理计划</text>
     </block>
     <block wx:else>
       <text class="empty-title">还没有任务哦～</text>
-      <text class="empty-text">先建宠物档案，或直接添加一条记录</text>
+      <text class="empty-text">点下方按钮添加第一条护理记录</text>
     </block>
   </view>
 
