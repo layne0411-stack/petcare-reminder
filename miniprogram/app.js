@@ -1,10 +1,10 @@
 // app.js — 微信静默登录（后端自建方案）
 const { login } = require('./utils/api');
 
-App({
-  onLaunch() {
-    // 启动即静默登录：wx.login 的 code 换 openid，服务端签发 token
-    // 用户无感知，数据按微信身份隔离；失败时各页面请求会自动重试登录
+// 静默登录（失败静默重试一次，不弹全局 toast）
+// 说明：页面请求遇 401 会自动重登，这里再弹「网络异常」属于误报；页面自身有加载失败提示兜底
+function doLogin(retried, delay) {
+  setTimeout(() => {
     login()
       .then(res => {
         if (res && res.nickname) {
@@ -19,9 +19,17 @@ App({
         }
       })
       .catch(err => {
-        console.error('登录失败:', err);
-        wx.showToast({ title: '网络异常，请稍后重试', icon: 'none' });
+        console.warn('[app] 登录失败:', err);
+        if (!retried) doLogin(true, 1500);   // 冷启动偶发超时，1.5s 后静默再试一次
       });
+  }, delay || 0);
+}
+
+App({
+  onLaunch() {
+    // 启动即静默登录：wx.login 的 code 换 openid，服务端签发 token
+    // 用户无感知，数据按微信身份隔离；失败时各页面请求会自动重试登录
+    doLogin(false, 0);
   },
 
   globalData: {},
