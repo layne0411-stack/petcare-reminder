@@ -26,7 +26,7 @@ from typing import Optional
 import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI, HTTPException, Header, Depends
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel
 
 # 读取 backend/.env 配置文件（python-dotenv；已有同名环境变量时以系统环境变量优先）
@@ -651,6 +651,97 @@ def upload_pet_avatar(body: AvatarIn, uid: int = Depends(current_user)):
         "avatar": f"/uploads/{filename}",
         "avatarDataUrl": f"data:{mime};base64,{base64.b64encode(raw).decode()}",
     }
+
+
+# ---------- 站点首页 ----------
+# 用途：① 公安联网备案审核时域名根路径需可正常访问；② 备案号需悬挂在首页底部
+# 备案号通过环境变量配置，未配置时显示占位（不要留空 html）
+ICP_NO = os.environ.get("ICP_NO", "")        # 如 津ICP备2026000000号-1
+POLICE_NO = os.environ.get("POLICE_NO", "")  # 公安联网备案号，审核通过后配置
+
+
+@app.get("/", response_class=HTMLResponse)
+def home():
+    icp_html = (
+        f'<a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer">{ICP_NO}</a>'
+        if ICP_NO else '<span>ICP 备案号配置中</span>'
+    )
+    police_html = (
+        f'<a href="https://beian.mps.gov.cn/" target="_blank" rel="noreferrer">{POLICE_NO}</a>'
+        if POLICE_NO else '<span>公安联网备案审核中</span>'
+    )
+    return """<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>崽崽打卡站 · 宠物护理记录工具</title>
+<meta name="description" content="崽崽打卡站是一款微信小程序，用于记录宠物喂养、驱虫、疫苗等护理任务，到期通过微信订阅消息提醒。">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 32px 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: radial-gradient(circle at 20% 0%, #FFEBD9 0%, #FFF6EC 45%, #FFF9F3 100%);
+    color: #5B4A3F; line-height: 1.7;
+  }
+  .card {
+    width: 100%; max-width: 460px; background: #FFFDF9; border-radius: 24px;
+    padding: 40px 32px 32px; text-align: center;
+    box-shadow: 0 18px 44px rgba(240, 123, 63, 0.13), 0 2px 6px rgba(240, 123, 63, 0.06);
+    border: 1px solid #FFE6D2;
+  }
+  .logo { font-size: 56px; line-height: 1; margin-bottom: 14px; }
+  h1 { font-size: 25px; letter-spacing: 1px; color: #4A3A30; margin-bottom: 8px; }
+  .sub { font-size: 14px; color: #A88E7C; margin-bottom: 26px; }
+  .tag {
+    display: inline-block; padding: 5px 14px; border-radius: 999px;
+    background: #FFF0E4; color: #E8722F; font-size: 12.5px; margin-bottom: 24px;
+  }
+  ul { list-style: none; text-align: left; margin-bottom: 26px; }
+  li {
+    font-size: 14.5px; color: #6B594C; padding: 9px 0 9px 30px; position: relative;
+    border-bottom: 1px dashed #F5E3D4;
+  }
+  li:last-child { border-bottom: 0; }
+  li::before { content: "🐾"; position: absolute; left: 4px; font-size: 14px; }
+  .hint {
+    font-size: 13.5px; color: #8C7666; background: #FFF4E9;
+    border-radius: 14px; padding: 14px 16px; margin-bottom: 26px;
+  }
+  .hint b { color: #E8722F; font-weight: 600; }
+  footer {
+    font-size: 12px; color: #B09C8C; text-align: center; margin-top: 26px;
+    display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center;
+  }
+  footer a { color: #B09C8C; text-decoration: none; }
+  footer a:hover { color: #E8722F; }
+</style>
+</head>
+<body>
+  <main class="card">
+    <div class="logo">🐶🐱</div>
+    <h1>崽崽打卡站</h1>
+    <p class="sub">给毛孩子记任务，到点提醒你别忘</p>
+    <div class="tag">微信小程序 · 宠物护理记录工具</div>
+    <ul>
+      <li>喂养、驱虫、疫苗、洗澡，一个任务一条记录</li>
+      <li>到期自动通过微信订阅消息提醒</li>
+      <li>打卡历史可查，体重变化看得见</li>
+    </ul>
+    <div class="hint">
+      本服务为微信小程序后端接口。<br>
+      请打开微信搜索 <b>「崽崽打卡站」</b> 使用。
+    </div>
+    <footer>
+      <span>© 2026 崽崽打卡站</span>
+      __ICP__
+      __POLICE__
+    </footer>
+  </main>
+</body>
+</html>""".replace("__ICP__", icp_html).replace("__POLICE__", police_html)
 
 
 @app.get("/uploads/{filename}")
